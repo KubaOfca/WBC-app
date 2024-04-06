@@ -79,7 +79,7 @@ def mfa_setup():
             qrcode_img.save(buffered)
             qrcode_imgb64 = b64encode(buffered.getvalue()).decode("utf-8")
             return render_template("mfa_template.html", qr_image=qrcode_imgb64)
-    return redirect(url_for("auth.html"))
+    return redirect(url_for("auth.sign_up"))
 
 
 @auth.route("/verify_mfa", methods=["GET", "POST"])

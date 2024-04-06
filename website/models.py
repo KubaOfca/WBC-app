@@ -1,5 +1,4 @@
 from flask_login import UserMixin
-from sqlalchemy.sql import func
 
 from . import db
 
@@ -16,7 +15,7 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(100))
-    data = db.Column(db.DateTime(timezone=True), default=func.now)
+    date = db.Column(db.DateTime(timezone=True))
 
 
 class Image(db.Model):
