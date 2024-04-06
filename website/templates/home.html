@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock%}
+{% block content %}
+
+<h1>Welcome {{ user_name }}</h1>
+
+<a data-toggle="modal" data-target="#create_project">
+    <button type="button" class="btn btn-primary">Create Project</button>
+</a>
+
+<form method="POST">
+    <div class="modal fade" id="create_project" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="editModalLabel">Create new project</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form">
+                        <div class="form-group">
+                            <label for="recipient-name" class="control-label">Project name:</label>
+                            <input type="text" class="form-control" id="recipient-name">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" id="btnUpdate" class="btn btn-primary">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock%}
