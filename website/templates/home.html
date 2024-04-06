@@ -8,29 +8,77 @@
     <button type="button" class="btn btn-primary">Create Project</button>
 </a>
 
-<form method="POST">
-    <div class="modal fade" id="create_project" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title" id="editModalLabel">Create new project</h4>
-                </div>
+<div class="modal fade" id="create_project" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="editModalLabel">Create new project</h4>
+            </div>
+            <form method="POST">
                 <div class="modal-body">
-                    <form role="form">
-                        <div class="form-group">
-                            <label for="recipient-name" class="control-label">Project name:</label>
-                            <input type="text" class="form-control" id="recipient-name">
-                        </div>
-                    </form>
+                    <div class="form-group">
+                        <label for="project-name">Project name:</label>
+                        <input type="text" class="form-control" id="project-name" name="project-name"
+                               placeholder="Enter project name">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     <button type="submit" id="btnUpdate" class="btn btn-primary">Create</button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
-</form>
+</div>
+
+<table id="data" class="table table-striped">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Project name</th>
+        <th>Date</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for project in projects %}
+    <tr>
+        <td>{{ project.id }}</td>
+        <td>
+            <a href="{{ url_for('views.project_page', project_id=project.id) }}">
+                {{ project.name }}
+            </a>
+        </td>
+        <td>{{ project.date.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+        <td>
+            <a href="{{ url_for('views.delete_project', project_id=project.id) }}"
+               onclick="return confirm('Are you sure?');"
+               title="Delete project">
+                <i class="material-symbols-outlined" style="font-size:25px; color: red">delete_forever</i>
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+
+<!--<div class="modal fade" id="confirm_delete" tabindex="-1" role="dialog" aria-labelledby="confirm_delete"-->
+<!--     aria-hidden="true">-->
+<!--    <div class="modal-dialog">-->
+<!--        <div class="modal-content">-->
+<!--            <div class="modal-header">-->
+<!--                <h4 id="confirm_delete_title">Are you sure ?</h4>-->
+<!--            </div>-->
+<!--            <form method="POST">-->
+<!--                <div class="modal-footer">-->
+<!--                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>-->
+<!--                    <button type="submit" id="delete" class="btn btn-danger">Delete</button>-->
+<!--                </div>-->
+<!--            </form>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
 
 {% endblock%}
