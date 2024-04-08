@@ -5,34 +5,74 @@
 <!-- Tabs navs -->
 <ul class="nav nav-tabs mb-3" id="ex-with-icons" role="tablist">
     <li class="nav-item" role="presentation">
-        <a class="nav-link active" id="ex-with-icons-tab-1" data-bs-toggle="tab" href="#ex-with-icons-tabs-1" role="tab"
-           aria-controls="ex-with-icons-tabs-1" aria-selected="true"><i class="material-symbols-outlined"
-                                                                        style="font-size:20px;">directions_run</i>Run</a>
+        <a class="nav-link active" id="run_tab" data-bs-toggle="tab" href="#run_tab_content" role="tab"
+           aria-controls="run_tab_content" aria-selected="true"><i
+                class="material-symbols-outlined">directions_run</i>Run</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link" id="ex-with-icons-tab-2" data-bs-toggle="tab" href="#ex-with-icons-tabs-2" role="tab"
-           aria-controls="ex-with-icons-tabs-2" aria-selected="false"><i class="material-symbols-outlined"
-                                                                         style="font-size:20px;">query_stats</i>Stats</a>
+        <a class="nav-link" id="stats_tab" data-bs-toggle="tab" href="#stats_tab_content" role="tab"
+           aria-controls="stats_tab_content" aria-selected="false"><i class="material-symbols-outlined">query_stats</i>Stats</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link" id="ex-with-icons-tab-3" data-bs-toggle="tab" href="#ex-with-icons-tabs-3" role="tab"
-           aria-controls="ex-with-icons-tabs-3" aria-selected="false"><i class="material-symbols-outlined"
-                                                                         style="font-size:20px">photo_library</i>Images</a>
+        <a class="nav-link" id="image_tab" data-bs-toggle="tab" href="#image_tab_content" role="tab"
+           aria-controls="image_tab_content" aria-selected="false"><i class="material-symbols-outlined"
+        >photo_library</i>Image</a>
     </li>
 </ul>
 <!-- Tabs navs -->
 
 <!-- Tabs content -->
-<div class="tab-content" id="ex-with-icons-content">
-    <div class="tab-pane fade show active" id="ex-with-icons-tabs-1" role="tabpanel"
+<div class="tab-content" id="tabs_content">
+    <div class="tab-pane fade show active" id="run_tab_content" role="tabpanel"
          aria-labelledby="ex-with-icons-tab-1">
-        Tab 1 content
+        <button>Run</button>
     </div>
-    <div class="tab-pane fade" id="ex-with-icons-tabs-2" role="tabpanel" aria-labelledby="ex-with-icons-tab-2">
-        Tab 2 content
+    <div class="tab-pane fade" id="stats_tab_content" role="tabpanel" aria-labelledby="stats_tab_content">
+        <button>Stats</button>
     </div>
-    <div class="tab-pane fade" id="ex-with-icons-tabs-3" role="tabpanel" aria-labelledby="ex-with-icons-tab-3">
-        Tab 3 content
+    <div class="tab-pane fade" id="image_tab_content" role="tabpanel" aria-labelledby="image_tab_content">
+
+        <form action="{{ url_for('views.upload_images', project_id=project_id) }}" method="post"
+              enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="imageUpload" class="form-label">Upload Images</label>
+                <input type="file" class="form-control" id="imageUpload" name="images[]" multiple accept="image/*">
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+
+        <table id="data" class="table table-striped">
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Image</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for image, image_png in images %}
+            <tr>
+                <td>{{ image.id }}</td>
+                <td>
+                    {{ image.name }}
+                </td>
+                <td>
+                    <img src="data:;base64,{{image_png}}" style="width: 100px; height: 100px;"/>
+                </td>
+                <td>{{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                <td>
+                    <a href="{{ url_for('views.delete_image', image_id=image.id) }}"
+                       onclick="return confirm('Are you sure?');"
+                       title="Delete image">
+                        <i class="material-symbols-outlined" style="font-size:25px; color: red">delete_forever</i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 <!-- Tabs content -->
@@ -40,6 +80,6 @@
 <!-- Include necessary MDB JavaScript and CSS files -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
 
 {% endblock %}
