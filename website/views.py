@@ -1,4 +1,5 @@
 import base64
+import math
 from datetime import datetime
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for
@@ -41,15 +42,28 @@ def delete_project(project_id):
 
 @views.route("/project_page/<int:project_id>")
 def project_page(project_id):
+    page = request.args.get("page", 1, type=int)
+    tab = request.args.get("tab", 1, type=int)
+    print(tab)
+    page_len = 10
+    start = (page - 1) * page_len
+    end = page * page_len
+
     images = Image.query.filter_by(project_id=project_id)
+    images_len = images.count()
+    last_page_number = math.ceil(images_len / page_len)
     images_png = []
-    for image in images:
+    for image in images[start:end]:
         images_png.append(base64.b64encode(image.image).decode('ascii'))
-    return render_template("project.html", project_id=project_id, images=list(zip(images, images_png)))
+    images_full_info = list(zip(images[start:end], images_png))
+
+    return render_template("project.html", project_id=project_id, images=images_full_info, page=page,
+                           last_page_number=last_page_number, images_len=images_len, tab=tab)
 
 
 @views.route("/upload_images/<int:project_id>", methods=["POST"])
 def upload_images(project_id):
+    tab = request.args.get("tab", 1, type=int)
     if "images[]" not in request.files:
         print("t")
         flash("No file part", category="error")
@@ -69,7 +83,7 @@ def upload_images(project_id):
 
     flash("Images uploaded successfully", category="success")
 
-    return redirect(url_for("views.project_page", project_id=project_id))
+    return redirect(url_for("views.project_page", project_id=project_id, tab=tab))
 
 
 def allowed_file(filename):
@@ -78,10 +92,11 @@ def allowed_file(filename):
 
 @views.route("/delete_image/<int:image_id>")
 def delete_image(image_id):
+    tab = request.args.get("tab", 1, type=int)
     image_to_delete = Image.query.filter_by(id=image_id).first()
     project_id = image_to_delete.project_id
     if image_to_delete:
         db.session.delete(image_to_delete)
         db.session.commit()
         flash("Image successfully deleted", category="success")
-    return redirect(url_for("views.project_page", project_id=project_id))
+    return redirect(url_for("views.project_page", project_id=project_id, tab=tab))
