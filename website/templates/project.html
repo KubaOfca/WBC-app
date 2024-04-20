@@ -2,6 +2,14 @@
 {% block title %}Project{% endblock %}
 {% block content %}
 
+<div class="spinner" id="spinner"
+     style="background-color: white; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: all 0.5s">
+    <div class="spinner-border text-primary" role="status" style="width: 60px; height: 60px">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+
+
 <!-- Tabs navs -->
 <ul class="nav nav-tabs mb-3" id="ex-with-icons" role="tablist">
     <li class="nav-item" role="presentation">
@@ -31,7 +39,16 @@
 <div class="tab-content" id="tabs_content">
     <div class="tab-pane fade {% if tab == 1 %}show active{% endif %}" id="run_tab_content" role="tabpanel"
          aria-labelledby="ex-with-icons-tab-1">
-        <button>Run</button>
+        <form id="run-form" action="{{ url_for('views.run_model', project_id=project_id, tab=1) }}" method="post"
+              enctype="multipart/form-data">
+            <button type="submit" class="btn btn-primary">Run</button>
+            <div class="progress">
+                <div class="progress-bar" id="run-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
+                     aria-valuemin="0"
+                     aria-valuemax="100">0%
+                </div>
+            </div>
+        </form>
     </div>
     <div class="tab-pane fade {% if tab == 2 %}show active{% endif %}" id="stats_tab_content" role="tabpanel"
          aria-labelledby="stats_tab_content">
@@ -67,7 +84,9 @@
                     {{ image.name }}
                 </td>
                 <td>
-                    <img src="data:;base64,{{image_png}}" style="width: 100px; height: 100px;"/>
+                    <a href="{{ url_for('views.show_image', image_id=image.id) }}" target="_blank">
+                        <img src="data:image/png;base64,{{image_png}}" style="width: 100px; height: 100px;"/>
+                    </a>
                 </td>
                 <td>{{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}</td>
                 <td>
@@ -116,6 +135,39 @@
 <!-- Include necessary MDB JavaScript and CSS files -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script type="text/javascript">
+    window.onload = function () {
+        const socket = io();
+        const loading = document.getElementById("spinner");
+        socket.connect("http://127.0.0.1:5000");
+        socket.on("connect", function () {
+            console.log("Connect!");
+            loading.style.opacity = "0";
+            setTimeout(() => {
+                loading.style.display = "none";
+            }, 500)
+
+
+        })
+        let run_bar = document.getElementById("run-bar")
+        socket.on("update progress", function (percent) {
+            console.log("get percent" + percent);
+            run_bar.style.width = percent + "%";
+            run_bar.innerHTML = run_bar.style.width;
+        })
+
+        // let run_form = document.getElementById("run-form")
+        // run_form.onsubmit = function (event) {
+        //     event.preventDefault()
+        //     fetch("/run", {
+        //         method: "POST"
+        //     })
+        // }
+    }
+
+
+</script>
 
 
 {% endblock %}

@@ -3,10 +3,12 @@ from os import path
 from flask import Flask
 from flask_login import LoginManager
 from flask_session import Session
+from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 DB_NAME = "database.db"
+socket = SocketIO()
 
 
 def create_app():
@@ -18,6 +20,7 @@ def create_app():
     db.init_app(app)
     session = Session()
     session.init_app(app)
+    socket.init_app(app)
     from .views import views
     from .auth import auth
 

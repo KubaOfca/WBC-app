@@ -1,11 +1,15 @@
 import base64
 import math
 from datetime import datetime
+from io import BytesIO
 
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+import numpy as np
+from PIL import Image as PILImage
+from flask import Blueprint, render_template, request, flash, redirect, url_for, Response
 from flask_login import login_required, current_user
+from ultralytics import YOLO
 
-from . import db
+from . import db, socket
 from .models import Project, Image
 
 views = Blueprint('views', __name__)
@@ -87,7 +91,7 @@ def upload_images(project_id):
 
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'bmp'}
 
 
 @views.route("/delete_image/<int:image_id>")
@@ -100,3 +104,37 @@ def delete_image(image_id):
         db.session.commit()
         flash("Image successfully deleted", category="success")
     return redirect(url_for("views.project_page", project_id=project_id, tab=tab))
+
+
+@views.route("/run/<int:project_id>", methods=["POST"])
+async def run_model(project_id):
+    model = YOLO(r"C:\Users\Jakub Lechowski\Desktop\master-thesis\code\best.pt")
+    images_to_run = Image.query.filter_by(project_id=project_id)
+    n_images = images_to_run.count()
+    step = 100 / n_images
+    progress = 0
+    for image in images_to_run:
+        image_byte = image.image
+        img_pil = PILImage.open(BytesIO(image_byte))
+        img_np = np.array(img_pil)
+        prediction = model.predict(img_np, stream=False, save=False, verbose=False)
+        progress += step
+        socket.emit("update progress", int(math.ceil(progress)))
+        pill_result = PILImage.fromarray(prediction[0].plot()[..., ::-1])
+        buff = BytesIO()
+        pill_result.save(buff, format="PNG")
+        buff.seek(0)
+        encoded = base64.b64encode(buff.read()).decode("utf-8")
+        image_bytes = base64.b64decode(encoded)
+        image.image = image_bytes
+        db.session.commit()
+    flash("Model successfully run", category="success")
+    db.session.close()
+    return redirect(url_for("views.project_page", project_id=project_id, tab=1))
+
+
+@views.route("/show_image/<int:image_id>")
+def show_image(image_id):
+    img = Image.query.filter_by(id=image_id).first()
+    file_type = img.name.split(".")[-1]
+    return Response(img.image, mimetype=file_type)
