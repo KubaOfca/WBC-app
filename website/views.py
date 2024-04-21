@@ -1,16 +1,19 @@
 import base64
+import json
 import math
 from datetime import datetime
 from io import BytesIO
 
 import numpy as np
+import plotly
+import plotly.express as px
 from PIL import Image as PILImage
 from flask import Blueprint, render_template, request, flash, redirect, url_for, Response
 from flask_login import login_required, current_user
 from ultralytics import YOLO
 
 from . import db, socket
-from .models import Project, Image
+from .models import Project, Image, Stats
 
 views = Blueprint('views', __name__)
 
@@ -57,12 +60,23 @@ def project_page(project_id):
     images_len = images.count()
     last_page_number = math.ceil(images_len / page_len)
     images_png = []
+    images_annotated_png = []
     for image in images[start:end]:
         images_png.append(base64.b64encode(image.image).decode('ascii'))
-    images_full_info = list(zip(images[start:end], images_png))
-
+        try:
+            images_annotated_png.append(base64.b64encode(image.annotated_image).decode('ascii'))
+        except TypeError:
+            images_annotated_png.append(None)
+    images_full_info = list(zip(images[start:end], images_png, images_annotated_png))
+    stats = Stats.query.filter(Stats.image_id.in_([image.id for image in images]))
+    import pandas as pd
+    df = pd.read_sql(stats.statement, db.engine)
+    df = pd.melt(df, id_vars=['id'], var_name='class_name', value_name='value')
+    fig1 = px.bar(df, x="class_name", y="value", title="Wide-Form Input")
+    graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
     return render_template("project.html", project_id=project_id, images=images_full_info, page=page,
-                           last_page_number=last_page_number, images_len=images_len, tab=tab)
+                           last_page_number=last_page_number, images_len=images_len, tab=tab,
+                           stats=graph1JSON)
 
 
 @views.route("/upload_images/<int:project_id>", methods=["POST"])
@@ -111,6 +125,9 @@ async def run_model(project_id):
     model = YOLO(r"C:\Users\Jakub Lechowski\Desktop\master-thesis\code\best.pt")
     images_to_run = Image.query.filter_by(project_id=project_id)
     n_images = images_to_run.count()
+    if not n_images:
+        flash("No images to run model", category="error")
+        return redirect(url_for("views.project_page", project_id=project_id, tab=1))
     step = 100 / n_images
     progress = 0
     for image in images_to_run:
@@ -120,13 +137,22 @@ async def run_model(project_id):
         prediction = model.predict(img_np, stream=False, save=False, verbose=False)
         progress += step
         socket.emit("update progress", int(math.ceil(progress)))
+        new_stats = Stats(image_id=image.id)
+        db.session.add(new_stats)
+        db.session.commit()
         pill_result = PILImage.fromarray(prediction[0].plot()[..., ::-1])
+        classes = prediction[0].names
+        results_classes = prediction[0].boxes.cls
+        for class_id in results_classes:
+            class_name = "_".join(classes[int(class_id)].lower().split(" "))
+            setattr(new_stats, class_name, getattr(new_stats, class_name) + 1)
+            db.session.commit()
         buff = BytesIO()
         pill_result.save(buff, format="PNG")
         buff.seek(0)
         encoded = base64.b64encode(buff.read()).decode("utf-8")
         image_bytes = base64.b64decode(encoded)
-        image.image = image_bytes
+        image.annotated_image = image_bytes
         db.session.commit()
     flash("Model successfully run", category="success")
     db.session.close()
@@ -138,3 +164,10 @@ def show_image(image_id):
     img = Image.query.filter_by(id=image_id).first()
     file_type = img.name.split(".")[-1]
     return Response(img.image, mimetype=file_type)
+
+
+@views.route("/show_image_annotated/<int:image_id>")
+def show_image_annotated(image_id):
+    img = Image.query.filter_by(id=image_id).first()
+    file_type = img.name.split(".")[-1]
+    return Response(img.annotated_image, mimetype=file_type)
