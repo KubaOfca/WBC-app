@@ -12,10 +12,11 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required, current_user
 from ultralytics import YOLO
 
-from . import db, socket
-from .models import Project, Image, Stats
+from . import socket, db
+from .models import Project, Image, Stats, MlModels
 
 views = Blueprint('views', __name__)
+IMAGE_TABLE_MAX_ROWS_DISPLAY = 10
 
 
 @views.route('/', methods=["GET", "POST"])
@@ -41,39 +42,13 @@ def add_project_to_db(user_id: int, project_name: str) -> None:
     db.session.commit()
 
 
-@views.route("/run")
-def run():
-    return render_template("run.html")
-
-
-@views.route("/stats")
-def stats():
-    return render_template("stats.html")
-
-
-@views.route("/image")
-def image():
-    return render_template("image.html")
-
-
-@views.route("/delete_project/<int:project_id>")
-def delete_project(project_id):
-    project_to_delete = Project.query.filter_by(id=project_id, user_id=current_user.id).first()
-    if project_to_delete:
-        db.session.delete(project_to_delete)
-        db.session.commit()
-        flash("Project successfully deleted", category="success")
-    return redirect(url_for("views.home"))
-
-
-@views.route("/project_page")
-def project_page():
-    page = request.args.get("page", 1, type=int)
-    tab = request.args.get("tab", 1, type=int)
+@views.route("/old_project")
+def old_project():
     project_id = request.args.get("project_id", 1, type=int)
-    print(tab)
-    page_len = 10
-    start = (page - 1) * page_len
+    tab = request.args.get("tab", 1, type=int)
+    page = request.args.get("page", 1, type=int)
+
+    start = (page - 1) * IMAGE_TABLE_MAX_ROWS_DISPLAY
     end = page * page_len
 
     images = Image.query.filter_by(project_id=project_id)
@@ -97,6 +72,61 @@ def project_page():
     return render_template("project.html", project_id=project_id, images=images_full_info, page=page,
                            last_page_number=last_page_number, images_len=images_len, tab=tab,
                            stats=graph1JSON)
+
+
+@views.route("/project")
+def project():
+    session["project_id"] = request.args.get("project_id", type=int)
+    return render_template("project.html", tab=1, page=1)
+
+
+@views.route("/run", methods=["POST"])
+async def run(project_id):
+    model = YOLO(MlModels.query.first().model)
+    images_to_run = Image.query.filter_by(project_id=session["project_id"])
+    n_images = images_to_run.count()
+    if not n_images:
+        flash("No images to run model", category="error")
+        return redirect(url_for("views.project", project_id=session["project_id"]))
+    step = 100 / n_images
+    progress = 0
+    for image in images_to_run:
+        image_byte = image.image
+        img_pil = PILImage.open(BytesIO(image_byte))
+        img_np = np.array(img_pil)
+        prediction = model.predict(img_np, stream=False, save=False, verbose=False)
+        progress += step
+        socket.emit("update progress", int(math.ceil(progress)))
+        new_stats = Stats(image_id=image.id)
+        db.session.add(new_stats)
+        db.session.commit()
+        pill_result = PILImage.fromarray(prediction[0].plot()[..., ::-1])
+        classes = prediction[0].names
+        results_classes = prediction[0].boxes.cls
+        for class_id in results_classes:
+            class_name = "_".join(classes[int(class_id)].lower().split(" "))
+            setattr(new_stats, class_name, getattr(new_stats, class_name) + 1)
+            db.session.commit()
+        buff = BytesIO()
+        pill_result.save(buff, format="PNG")
+        buff.seek(0)
+        encoded = base64.b64encode(buff.read()).decode("utf-8")
+        image_bytes = base64.b64decode(encoded)
+        image.annotated_image = image_bytes
+        db.session.commit()
+    flash("Model successfully run", category="success")
+    db.session.close()
+    return redirect(url_for("views.project_page", project_id=session["project_id"]))
+
+
+@views.route("/delete_project/<int:project_id>")
+def delete_project(project_id):
+    project_to_delete = Project.query.filter_by(id=project_id, user_id=current_user.id).first()
+    if project_to_delete:
+        db.session.delete(project_to_delete)
+        db.session.commit()
+        flash("Project successfully deleted", category="success")
+    return redirect(url_for("views.home"))
 
 
 @views.route("/upload_images/<int:project_id>", methods=["POST"])
@@ -138,45 +168,6 @@ def delete_image(image_id):
         db.session.commit()
         flash("Image successfully deleted", category="success")
     return redirect(url_for("views.project_page", project_id=project_id, tab=tab))
-
-
-@views.route("/run/<int:project_id>", methods=["POST"])
-async def run_model(project_id):
-    model = YOLO(r"C:\Users\Jakub Lechowski\Desktop\master-thesis\code\best.pt")
-    images_to_run = Image.query.filter_by(project_id=project_id)
-    n_images = images_to_run.count()
-    if not n_images:
-        flash("No images to run model", category="error")
-        return redirect(url_for("views.project_page", project_id=project_id, tab=1))
-    step = 100 / n_images
-    progress = 0
-    for image in images_to_run:
-        image_byte = image.image
-        img_pil = PILImage.open(BytesIO(image_byte))
-        img_np = np.array(img_pil)
-        prediction = model.predict(img_np, stream=False, save=False, verbose=False)
-        progress += step
-        socket.emit("update progress", int(math.ceil(progress)))
-        new_stats = Stats(image_id=image.id)
-        db.session.add(new_stats)
-        db.session.commit()
-        pill_result = PILImage.fromarray(prediction[0].plot()[..., ::-1])
-        classes = prediction[0].names
-        results_classes = prediction[0].boxes.cls
-        for class_id in results_classes:
-            class_name = "_".join(classes[int(class_id)].lower().split(" "))
-            setattr(new_stats, class_name, getattr(new_stats, class_name) + 1)
-            db.session.commit()
-        buff = BytesIO()
-        pill_result.save(buff, format="PNG")
-        buff.seek(0)
-        encoded = base64.b64encode(buff.read()).decode("utf-8")
-        image_bytes = base64.b64decode(encoded)
-        image.annotated_image = image_bytes
-        db.session.commit()
-    flash("Model successfully run", category="success")
-    db.session.close()
-    return redirect(url_for("views.project_page", project_id=project_id, tab=1))
 
 
 @views.route("/show_image/<int:image_id>")

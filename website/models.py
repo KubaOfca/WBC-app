@@ -1,4 +1,8 @@
+import os
+from pathlib import Path
+
 from flask_login import UserMixin
+from sqlalchemy import event
 from sqlalchemy.orm import relationship
 
 from . import db
@@ -45,3 +49,22 @@ class Stats(db.Model):
     neutrophile_band = db.Column(db.Integer, default=0)
     neutrophile_segment = db.Column(db.Integer, default=0)
     normoblast = db.Column(db.Integer, default=0)
+
+
+class MlModels(db.Model):
+    __tablename__ = 'models'
+    id = db.Column(db.Integer, primary_key=True)
+    model = db.Column(db.String(500))
+
+
+@event.listens_for(MlModels.__table__, 'after_create')
+def create_departments(*args, **kwargs):
+    for model_path in os.listdir(os.path.join(Path(__file__).parent.parent, "ml_models")):
+        if not is_model_exists_in_db(model_path):
+            db.session.add(MlModels(model=os.path.join(Path(__file__).parent.parent, "ml_models", model_path)))
+            db.session.commit()
+
+
+def is_model_exists_in_db(model_path):
+    existing_model = MlModels.query.filter_by(model=model_path).first()
+    return existing_model is not None

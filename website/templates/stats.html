@@ -1,7 +1,8 @@
-{% extends "project.html" %}
-{% block content %}
-<div class="tab-pane fade {% if tab == 2 %}show active{% endif %}" id="stats_tab_content" role="tabpanel"
-     aria-labelledby="stats_tab_content">
-    <div id="chart1"></div>
-</div>
-{% endblock %}
+<div id="chart1"></div>
+<span>STATS!!!</span>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript">
+        var graphs1 = {{ stats | safe}};
+        Plotly.plot("chart1", graphs1,{});
+</script>
