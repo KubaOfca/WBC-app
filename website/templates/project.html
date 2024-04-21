@@ -9,26 +9,23 @@
     </div>
 </div>
 
-
+<!--aria-controls="run_tab_content"-->
 <!-- Tabs navs -->
 <ul class="nav nav-tabs mb-3" id="ex-with-icons" role="tablist">
     <li class="nav-item" role="presentation">
         <a class="nav-link {% if tab == 1 %}active{% endif %}" id="run_tab" data-bs-toggle="tab"
-           href="#run_tab_content"
-           role="tab"
-           aria-controls="run_tab_content"><i
+           href="{{ url_for('views.run', project_id=project_id) }}"
+           role="tab"><i
                 class="material-symbols-outlined">directions_run</i>Run</a>
     </li>
     <li class="nav-item" role="presentation">
         <a class="nav-link {% if tab == 2 %}active{% endif %}" id="stats_tab" data-bs-toggle="tab"
-           href="#stats_tab_content" role="tab"
-           aria-controls="stats_tab_content"><i
+           href="{{ url_for('views.stats', project_id=project_id) }}" role="tab"><i
                 class="material-symbols-outlined">query_stats</i>Stats</a>
     </li>
     <li class="nav-item" role="presentation">
         <a class="nav-link {% if tab == 3 %}active{% endif %}" id="image_tab" data-bs-toggle="tab"
-           href="#image_tab_content" role="tab"
-           aria-controls="image_tab_content"><i
+           href="{{ url_for('views.image', project_id=project_id) }}" role="tab"><i
                 class="material-symbols-outlined"
         >photo_library</i>Image</a>
     </li>
@@ -37,108 +34,8 @@
 
 <!-- Tabs content -->
 <div class="tab-content" id="tabs_content">
-    <div class="tab-pane fade {% if tab == 1 %}show active{% endif %}" id="run_tab_content" role="tabpanel"
-         aria-labelledby="ex-with-icons-tab-1">
-        <form id="run-form" action="{{ url_for('views.run_model', project_id=project_id, tab=1) }}" method="post"
-              enctype="multipart/form-data">
-            <button type="submit" class="btn btn-primary">Run</button>
-            <div class="progress">
-                <div class="progress-bar" id="run-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
-                     aria-valuemin="0"
-                     aria-valuemax="100">0%
-                </div>
-            </div>
-        </form>
-    </div>
-    <div class="tab-pane fade {% if tab == 2 %}show active{% endif %}" id="stats_tab_content" role="tabpanel"
-         aria-labelledby="stats_tab_content">
-        <div id="chart1"></div>
-    </div>
-    <div class="tab-pane fade {% if tab == 3 %}show active{% endif %}" id="image_tab_content" role="tabpanel"
-         aria-labelledby="image_tab_content">
-
-        <form action="{{ url_for('views.upload_images', project_id=project_id, page=page, tab=3) }}" method="post"
-              enctype="multipart/form-data">
-            <div class="mb-3">
-                <label for="imageUpload" class="form-label">Upload Images</label>
-                <input type="file" class="form-control" id="imageUpload" name="images[]" multiple accept="image/*">
-            </div>
-            <button type="submit" class="btn btn-primary">Upload</button>
-        </form>
-
-        <table id="data" class="table table-striped">
-            <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Image</th>
-                <th>Annotated Image</th>
-                <th>Date</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for image, image_png, image_annotated_png in images %}
-            <tr>
-                <td>{{ image.id }}</td>
-                <td>
-                    {{ image.name }}
-                </td>
-                <td>
-                    <a href="{{ url_for('views.show_image', image_id=image.id) }}" target="_blank">
-                        <img src="data:image/png;base64,{{image_png}}" style="width: 100px; height: 100px;"/>
-                    </a>
-                </td>
-                <td>
-                    {% if image_annotated_png is not none %}
-                    <a href="{{ url_for('views.show_image_annotated', image_id=image.id) }}" target="_blank">
-                        <img src="data:image/png;base64,{{image_annotated_png}}" style="width: 100px; height: 100px;"/>
-                    </a>
-                    {% else %}
-                    <span class="badge badge-warning">Empty</span>
-                    {% endif %}
-                </td>
-                <td>{{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}</td>
-                <td>
-                    <a href="{{ url_for('views.delete_image', image_id=image.id, tab=3) }}"
-                       onclick="return confirm('Are you sure?');"
-                       title="Delete image">
-                        <i class="material-symbols-outlined" style="font-size:25px; color: red">delete_forever</i>
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <span class="badge badge-light">Rows: {{ images|length }}</span>
-        <br/>
-        <span class="badge badge-light">Total Rows: {{ images_len }}</span>
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-end">
-                <li class="page-item"><a class="page-link"
-                                         href="{{ url_for('views.project_page', page=1, project_id=project_id, tab=3) }}">First</a>
-                </li>
-                <li class="page-item"><a class="page-link"
-                                         href="{{ url_for('views.project_page', page=page - 1, project_id=project_id, tab=3) }}">{{
-                    page -
-                    1 if
-                    page > 1 else "-"}}</a>
-                </li>
-                <li class="page-item active">
-                    <a class="page-link"
-                       href="{{ url_for('views.project_page', page=page, project_id=project_id, tab=3) }}">{{
-                        page
-                        }}</a>
-                </li>
-                <li class="page-item"><a class="page-link"
-                                         href="{{ url_for('views.project_page', page=page + 1, project_id=project_id, tab=3) }}">{{
-                    page + 1 if page != last_page_number else "-"}}</a></li>
-                <li class="page-item"><a class="page-link"
-                                         href="{{ url_for('views.project_page', page=last_page_number, project_id=project_id, tab=3) }}">Last</a>
-                </li>
-            </ul>
-        </nav>
-    </div>
+    {% block tabs_content %}
+    {% endblock %}
 </div>
 <!-- Tabs content -->
 

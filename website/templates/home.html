@@ -2,35 +2,11 @@
 {% block title %}Home{% endblock%}
 {% block content %}
 
-<h1>Welcome {{ user_name }}</h1>
+<h1>Welcome {{ session['user_name'] }}</h1>
 
-<a data-toggle="modal" data-target="#create_project">
+<a data-toggle="modal" data-target="#create_project_modal">
     <button type="button" class="btn btn-primary">Create Project</button>
 </a>
-
-<div class="modal fade" id="create_project" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
-     aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="editModalLabel">Create new project</h4>
-            </div>
-            <form method="POST">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="project-name">Project name:</label>
-                        <input type="text" class="form-control" id="project-name" name="project-name"
-                               placeholder="Enter project name">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="submit" id="btnUpdate" class="btn btn-primary">Create</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <table id="data" class="table table-striped">
     <thead>
@@ -42,7 +18,7 @@
     </tr>
     </thead>
     <tbody>
-    {% for project in projects %}
+    {% for project in user_projects %}
     <tr>
         <td>{{ project.id }}</td>
         <td>
@@ -62,5 +38,8 @@
     {% endfor %}
     </tbody>
 </table>
+
+<!--Modals-->
+{% include 'modals/create_project_modal.html' %}
 
 {% endblock%}

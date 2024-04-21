@@ -1,0 +1,16 @@
+{% extends "project.html" %}
+{% block content %}
+<div class="tab-pane fade {% if tab == 1 %}show active{% endif %}" id="run_tab_content" role="tabpanel"
+     aria-labelledby="ex-with-icons-tab-1">
+    <form id="run-form" action="{{ url_for('views.run_model', project_id=project_id, tab=1) }}" method="post"
+          enctype="multipart/form-data">
+        <button type="submit" class="btn btn-primary">Run</button>
+        <div class="progress">
+            <div class="progress-bar" id="run-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
+                 aria-valuemin="0"
+                 aria-valuemax="100">0%
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -8,7 +8,7 @@ import numpy as np
 import plotly
 import plotly.express as px
 from PIL import Image as PILImage
-from flask import Blueprint, render_template, request, flash, redirect, url_for, Response
+from flask import Blueprint, render_template, request, flash, redirect, url_for, Response, session
 from flask_login import login_required, current_user
 from ultralytics import YOLO
 
@@ -22,19 +22,38 @@ views = Blueprint('views', __name__)
 @login_required
 def home():
     user_name = current_user.first_name
-    active_projects = Project.query.filter_by(user_id=current_user.id)
+    session["user_name"] = user_name
+    user_projects = Project.query.filter_by(user_id=current_user.id)
     if request.method == "POST":
-        project_name = request.form.get("project-name")
-        new_project = Project(
-            user_id=current_user.id,
-            name=project_name,
-            date=datetime.now()
-        )
-        db.session.add(new_project)
-        db.session.commit()
+        add_project_to_db(user_id=current_user.id, project_name=request.form.get("project-name"))
         flash("Project created!", category="success")
         return redirect(url_for("views.home"))  # redirect to close POST when refresh
-    return render_template("home.html", user_name=user_name, projects=active_projects)
+    return render_template("home.html", user_projects=user_projects)
+
+
+def add_project_to_db(user_id: int, project_name: str) -> None:
+    new_project = Project(
+        user_id=user_id,
+        name=project_name,
+        date=datetime.now()
+    )
+    db.session.add(new_project)
+    db.session.commit()
+
+
+@views.route("/run")
+def run():
+    return render_template("run.html")
+
+
+@views.route("/stats")
+def stats():
+    return render_template("stats.html")
+
+
+@views.route("/image")
+def image():
+    return render_template("image.html")
 
 
 @views.route("/delete_project/<int:project_id>")
@@ -47,10 +66,11 @@ def delete_project(project_id):
     return redirect(url_for("views.home"))
 
 
-@views.route("/project_page/<int:project_id>")
-def project_page(project_id):
+@views.route("/project_page")
+def project_page():
     page = request.args.get("page", 1, type=int)
     tab = request.args.get("tab", 1, type=int)
+    project_id = request.args.get("project_id", 1, type=int)
     print(tab)
     page_len = 10
     start = (page - 1) * page_len
