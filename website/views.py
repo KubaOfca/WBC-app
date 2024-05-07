@@ -1,21 +1,19 @@
-import base64
+import json
 import json
 import math
 import os
 from datetime import datetime
-from io import BytesIO
 
-import numpy as np
 import plotly
 import plotly.express as px
-from PIL import Image as PILImage
-from flask import Blueprint, render_template, request, flash, redirect, url_for, Response, session
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_required, current_user
 from ultralytics import YOLO
 
 from . import socket, db
 from .models import Project, Image, Stats, MlModels
-from .utils import get_user_projects, add_project_to_db
+from .utils import get_user_projects, add_project_to_db, load_img_as_np_array, get_annotated_image_from_prediction, \
+    get_prediction_stats
 
 views = Blueprint('views', __name__)
 IMAGE_TABLE_MAX_ROWS_DISPLAY = 10
@@ -37,25 +35,6 @@ def home():
 
 @views.route("/old_project")
 def old_project():
-    project_id = request.args.get("project_id", 1, type=int)
-    tab = request.args.get("tab", 1, type=int)
-    page = request.args.get("page", 1, type=int)
-
-    start = (page - 1) * IMAGE_TABLE_MAX_ROWS_DISPLAY
-    end = page * page_len
-
-    images = Image.query.filter_by(project_id=project_id)
-    images_len = images.count()
-    last_page_number = math.ceil(images_len / page_len)
-    images_png = []
-    images_annotated_png = []
-    for image in images[start:end]:
-        images_png.append(base64.b64encode(image.image).decode('ascii'))
-        try:
-            images_annotated_png.append(base64.b64encode(image.annotated_image).decode('ascii'))
-        except TypeError:
-            images_annotated_png.append(None)
-    images_full_info = list(zip(images[start:end], images_png, images_annotated_png))
     stats = Stats.query.filter(Stats.image_id.in_([image.id for image in images]))
     import pandas as pd
     df = pd.read_sql(stats.statement, db.engine)
@@ -91,6 +70,7 @@ def get_project_images():
     images = Image.query.filter_by(project_id=session["project_id"])
     first_image_on_page = IMAGE_TABLE_MAX_ROWS_DISPLAY * (session["image_page"] - 1)
     last_image_on_page = first_image_on_page + IMAGE_TABLE_MAX_ROWS_DISPLAY
+    session["total_rows"] = images.count()
     session["last_page"] = max(math.ceil(images.count() / IMAGE_TABLE_MAX_ROWS_DISPLAY), 1)
     return images[first_image_on_page:last_image_on_page]
 
@@ -142,67 +122,52 @@ def delete_image():
         db.session.delete(image_to_delete)
         db.session.commit()
         flash("Image successfully deleted", category="success")
-    return redirect(url_for("views.project", tab=3))
+    return redirect(url_for("views.project", tab=IMAGE_TAB))
 
 
 @views.route("/run", methods=["POST"])
-async def run(project_id):
+async def run():
     model = YOLO(MlModels.query.first().model)
     images_to_run = Image.query.filter_by(project_id=session["project_id"])
-    n_images = images_to_run.count()
-    if not n_images:
+    n_images_to_run = images_to_run.count()
+    if not n_images_to_run:
         flash("No images to run model", category="error")
-        return redirect(url_for("views.project", project_id=session["project_id"]))
-    step = 100 / n_images
-    progress = 0
+        return redirect(url_for("views.project"))
+    progress_bar_step_size = 100 / n_images_to_run
+    progress_bar_step = 0
     for image in images_to_run:
-        image_byte = image.image
-        img_pil = PILImage.open(BytesIO(image_byte))
-        img_np = np.array(img_pil)
-        prediction = model.predict(img_np, stream=False, save=False, verbose=False)
-        progress += step
-        socket.emit("update progress", int(math.ceil(progress)))
-        new_stats = Stats(image_id=image.id)
-        db.session.add(new_stats)
+        img_array = load_img_as_np_array(image.image)
+        prediction = model.predict(img_array, stream=False, save=False, verbose=False)
+        progress_bar_step += progress_bar_step_size
+        socket.emit("update progress", int(math.ceil(progress_bar_step)))
+        annotated_image = get_annotated_image_from_prediction(prediction)
+        annotated_image.save(os.path.join(
+            "website",
+            "static",
+            f"annotated_{image.name}",
+        ))
+        image.annotated_image = f"annotated_{image.name}"
         db.session.commit()
-        pill_result = PILImage.fromarray(prediction[0].plot()[..., ::-1])
-        classes = prediction[0].names
-        results_classes = prediction[0].boxes.cls
-        for class_id in results_classes:
-            class_name = "_".join(classes[int(class_id)].lower().split(" "))
-            setattr(new_stats, class_name, getattr(new_stats, class_name) + 1)
+        prediction_stats = get_prediction_stats(prediction)
+        existing_stats = db.session.query(Stats).filter(Stats.image_id == image.id)
+        if existing_stats is not None:
+            existing_stats.delete()
             db.session.commit()
-        buff = BytesIO()
-        pill_result.save(buff, format="PNG")
-        buff.seek(0)
-        encoded = base64.b64encode(buff.read()).decode("utf-8")
-        image_bytes = base64.b64decode(encoded)
-        image.annotated_image = image_bytes
-        db.session.commit()
+        for key, value in prediction_stats.items():
+            new_stats = Stats(image_id=image.id, class_name=key, count=value)
+            db.session.add(new_stats)
+            db.session.commit()
     flash("Model successfully run", category="success")
     db.session.close()
-    return redirect(url_for("views.project_page", project_id=session["project_id"]))
+    return redirect(url_for("views.project", tab=RUN_TAB))
 
 
-@views.route("/delete_project/<int:project_id>")
-def delete_project(project_id):
+@views.route("/delete_project/")
+def delete_project():
+    project_id = request.args.get("project_id", type=int)
     project_to_delete = Project.query.filter_by(id=project_id, user_id=current_user.id).first()
     if project_to_delete:
         db.session.delete(project_to_delete)
         db.session.commit()
         flash("Project successfully deleted", category="success")
     return redirect(url_for("views.home"))
-
-
-@views.route("/show_image/<int:image_id>")
-def show_image(image_id):
-    img = Image.query.filter_by(id=image_id).first()
-    file_type = img.name.split(".")[-1]
-    return Response(img.image, mimetype=file_type)
-
-
-@views.route("/show_image_annotated/<int:image_id>")
-def show_image_annotated(image_id):
-    img = Image.query.filter_by(id=image_id).first()
-    file_type = img.name.split(".")[-1]
-    return Response(img.annotated_image, mimetype=file_type)

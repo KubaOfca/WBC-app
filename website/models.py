@@ -40,15 +40,8 @@ class Stats(db.Model):
     __tablename__ = 'stats'
     id = db.Column(db.Integer, primary_key=True)
     image_id = db.Column(db.Integer, default=0)
-    basophile = db.Column(db.Integer, default=0)
-    eosinophile = db.Column(db.Integer, default=0)
-    lymphoblast = db.Column(db.Integer, default=0)
-    lymphocyte = db.Column(db.Integer, default=0)
-    monocyte = db.Column(db.Integer, default=0)
-    myeloblast = db.Column(db.Integer, default=0)
-    neutrophile_band = db.Column(db.Integer, default=0)
-    neutrophile_segment = db.Column(db.Integer, default=0)
-    normoblast = db.Column(db.Integer, default=0)
+    class_name = db.Column(db.String(100), default="Unknown")
+    count = db.Column(db.Integer, default=0)
 
 
 class MlModels(db.Model):

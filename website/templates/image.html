@@ -33,7 +33,10 @@
         </td>
         <td>
             {% if image.annotated_image is not none %}
-            <img src="{{ image.annotated_image }}" style="width: 100px; height: 100px;"/>
+            <a href="{{ url_for('static', filename=image.annotated_image) }}" target="_blank">
+                <img src="{{ url_for('static', filename=image.annotated_image) }}"
+                     style="width: 100px; height: 100px;"/>
+            </a>
             {% else %}
             <span class="badge badge-warning">Empty</span>
             {% endif %}
@@ -54,7 +57,7 @@
 </table>
 <span class="badge badge-light">Rows: {{ images|length }}</span>
 <br/>
-<span class="badge badge-light">Total Rows: {{ images_len }}</span>
+<span class="badge badge-light">Total Rows: {{ session['total_rows'] }}</span>
 <nav aria-label="Page navigation">
     <ul class="pagination justify-content-end">
         <li class="page-item">
