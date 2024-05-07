@@ -51,7 +51,7 @@ def sign_up():
             password_hash = generate_password_hash(password1)
             new_user = User(
                 email=email,
-                first_name=first_name,
+                name=first_name,
                 password=password_hash,
                 secret_key=pyotp.random_base32(),
             )
@@ -71,7 +71,7 @@ def mfa_setup():
         secret_key = user.secret_key
         if secret_key:
             url = pyotp.totp.TOTP(secret_key).provisioning_uri(
-                name=user.first_name, issuer_name="WBC_Scan")
+                name=user.name, issuer_name="WBC_Scan")
             qrcode_handle = qrcode.QRCode(version=1, box_size=10, border=5)
             qrcode_handle.add_data(url)
             qrcode_img = qrcode_handle.make_image(fill_color='black', back_color='white')

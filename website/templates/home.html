@@ -22,7 +22,7 @@
     <tr>
         <td>{{ project.id }}</td>
         <td>
-            <a href="{{ url_for('views.project', project_id=project.id) }}">
+            <a href="{{ url_for('views.project', project_id=project.id, page=1, tab=1) }}">
                 {{ project.name }}
             </a>
         </td>

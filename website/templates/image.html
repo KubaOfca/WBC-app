@@ -20,27 +20,25 @@
     </tr>
     </thead>
     <tbody>
-    {% for image, image_png, image_annotated_png in images %}
+    {% for image in images %}
     <tr>
         <td>{{ image.id }}</td>
         <td>
             {{ image.name }}
         </td>
         <td>
-            <a href="{{ url_for('views.show_image', image_id=image.id) }}" target="_blank">
-                <img src="data:image/png;base64,{{image_png}}" style="width: 100px; height: 100px;"/>
-            </a>
+            <img src="{{ image.image }}" style="width: 100px; height: 100px;"/>
         </td>
         <td>
-            {% if image_annotated_png is not none %}
-            <a href="{{ url_for('views.show_image_annotated', image_id=image.id) }}" target="_blank">
-                <img src="data:image/png;base64,{{image_annotated_png}}" style="width: 100px; height: 100px;"/>
-            </a>
+            {% if image.annotated_image is not none %}
+            <img src="{{ image.annotated_image }}" style="width: 100px; height: 100px;"/>
             {% else %}
             <span class="badge badge-warning">Empty</span>
             {% endif %}
         </td>
-        <td>{{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+        <td>
+            {{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}
+        </td>
         <td>
             <a href="{{ url_for('views.delete_image', image_id=image.id, tab=3) }}"
                onclick="return confirm('Are you sure?');"
@@ -57,26 +55,29 @@
 <span class="badge badge-light">Total Rows: {{ images_len }}</span>
 <nav aria-label="Page navigation">
     <ul class="pagination justify-content-end">
-        <li class="page-item"><a class="page-link"
-                                 href="{{ url_for('views.project', page=1, project_id=session['project_id'], tab=3) }}">First</a>
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('views.project', page=1, tab=3) }}">
+                First
+            </a>
         </li>
-        <li class="page-item"><a class="page-link"
-                                 href="{{ url_for('views.project', page=page - 1, project_id=session['project_id'], tab=3) }}">{{
-            page -
-            1 if
-            page > 1 else "-"}}</a>
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('views.project', page=session['image_page'] - 1, tab=3) }}">
+                {{ session['image_page'] - 1 if session['image_page'] > 1 else "-"}}
+            </a>
         </li>
         <li class="page-item active">
-            <a class="page-link"
-               href="{{ url_for('views.project', page=page, project_id=session['project_id'], tab=3) }}">{{
-                page
-                }}</a>
+            <a class="page-link" href="{{ url_for('views.project', page=session['image_page'], tab=3) }}">
+                {{ session['image_page'] }}
+            </a>
         </li>
-        <li class="page-item"><a class="page-link"
-                                 href="{{ url_for('views.project', page=page + 1, project_id=session['project_id'], tab=3) }}">{{
-            page + 1 if page != last_page_number else "-"}}</a></li>
-        <li class="page-item"><a class="page-link"
-                                 href="{{ url_for('views.project', page=last_page_number, project_id=session['project_id'], tab=3) }}">Last</a>
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('views.project', page=session['image_page'] + 1, tab=3) }}">
+                {{ session['image_page'] + 1 if session['image_page'] < session['last_page'] else "-"}}</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('views.project', page=session['last_page'], tab=3) }}">
+                Last
+            </a>
         </li>
     </ul>
 </nav>

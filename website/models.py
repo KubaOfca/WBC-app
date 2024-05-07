@@ -12,7 +12,7 @@ class User(db.Model, UserMixin):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True)
-    first_name = db.Column(db.String(150))
+    name = db.Column(db.String(150))
     password = db.Column(db.String(150))
     secret_key = db.Column(db.String(32))
 
@@ -32,8 +32,8 @@ class Image(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
     name = db.Column(db.String(100))
     date = db.Column(db.DateTime(timezone=True))
-    image = db.Column(db.LargeBinary)
-    annotated_image = db.Column(db.LargeBinary, default=None)
+    image = db.Column(db.String(1000))
+    annotated_image = db.Column(db.String(1000), default=None)
 
 
 class Stats(db.Model):

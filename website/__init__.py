@@ -9,6 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 DB_NAME = "database.db"
 socket = SocketIO()
+UPLOAD_IMG_FOLDER = "./website/static"
 
 
 def create_app():
@@ -17,6 +18,7 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = f'sqlite:///{DB_NAME}'
     app.config["SESSION_PERMANENT"] = False
     app.config["SESSION_TYPE"] = "filesystem"
+    app.config['UPLOAD_FOLDER'] = UPLOAD_IMG_FOLDER
     db.init_app(app)
     session = Session()
     session.init_app(app)

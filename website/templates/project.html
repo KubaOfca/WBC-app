@@ -12,15 +12,15 @@
 <!-- Tabs navs -->
 <nav>
     <div class="nav nav-tabs" id="myTab" role="tablist">
-        <a class="nav-item nav-link {% if tab == 1 %}active{% endif %}" data-toggle="tab"
+        <a class="nav-item nav-link {% if session['tab'] == 1 %}active{% endif %}" data-toggle="tab"
            href="#run_tab_content" role="tab" aria-controls="run" aria-selected="true">
             <i class="material-symbols-outlined">directions_run</i>
             Run</a>
-        <a class="nav-item nav-link {% if tab == 2 %}active{% endif %}" data-toggle="tab"
+        <a class="nav-item nav-link {% if session['tab'] == 2 %}active{% endif %}" data-toggle="tab"
            href="#stats_tab_content" role="tab" aria-controls="stats" aria-selected="false">
             <i class="material-symbols-outlined">query_stats</i>
             Stats</a>
-        <a class="nav-item nav-link {% if tab == 3 %}active{% endif %}" data-toggle="tab"
+        <a class="nav-item nav-link {% if session['tab'] == 3 %}active{% endif %}" data-toggle="tab"
            href="#image_tab_content" role="tab" aria-controls="image" aria-selected="false">
             <i class="material-symbols-outlined">photo_library</i>
             Image</a>
@@ -29,15 +29,15 @@
 
 <!-- Tabs content -->
 <div class="tab-content" id="tabs_content">
-    <div class="tab-pane fade {% if tab == 1 %}show active{% endif %}" id="run_tab_content" role="tabpanel"
+    <div class="tab-pane fade {% if session['tab'] == 1 %}show active{% endif %}" id="run_tab_content" role="tabpanel"
          aria-labelledby="run-tab">
         {% include 'run.html' %}
     </div>
-    <div class="tab-pane fade {% if tab == 2 %}show active{% endif %}" id="stats_tab_content" role="tabpanel"
+    <div class="tab-pane fade {% if session['tab'] == 2 %}show active{% endif %}" id="stats_tab_content" role="tabpanel"
          aria-labelledby="stats-tab">
         {% include 'stats.html' %}
     </div>
-    <div class="tab-pane fade {% if tab == 3 %}show active{% endif %}" id="image_tab_content" role="tabpanel"
+    <div class="tab-pane fade {% if session['tab'] == 3 %}show active{% endif %}" id="image_tab_content" role="tabpanel"
          aria-labelledby="image-tab">
         {% include 'image.html' %}
     </div>

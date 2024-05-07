@@ -14,32 +14,24 @@ from ultralytics import YOLO
 
 from . import socket, db
 from .models import Project, Image, Stats, MlModels
+from .utils import get_user_projects, add_project_to_db
 
 views = Blueprint('views', __name__)
 IMAGE_TABLE_MAX_ROWS_DISPLAY = 10
+RUN_TAB = 1
+STATS_TAB = 2
+IMAGE_TAB = 3
 
 
 @views.route('/', methods=["GET", "POST"])
 @login_required
 def home():
-    user_name = current_user.first_name
-    session["user_name"] = user_name
-    user_projects = Project.query.filter_by(user_id=current_user.id)
+    session["user_name"] = current_user.name
     if request.method == "POST":
-        add_project_to_db(user_id=current_user.id, project_name=request.form.get("project-name"))
+        add_project_to_db(user_id=current_user.id, project_name=request.form.get("new-project-name"))
         flash("Project created!", category="success")
-        return redirect(url_for("views.home"))  # redirect to close POST when refresh
-    return render_template("home.html", user_projects=user_projects)
-
-
-def add_project_to_db(user_id: int, project_name: str) -> None:
-    new_project = Project(
-        user_id=user_id,
-        name=project_name,
-        date=datetime.now()
-    )
-    db.session.add(new_project)
-    db.session.commit()
+        return redirect(url_for("views.home"))  # redirect in order to close POST form (e.g. when refresh)
+    return render_template("home.html", user_projects=get_user_projects())
 
 
 @views.route("/old_project")
@@ -76,8 +68,30 @@ def old_project():
 
 @views.route("/project")
 def project():
-    session["project_id"] = request.args.get("project_id", type=int)
-    return render_template("project.html", tab=1, page=1)
+    project_id = request.args.get("project_id", type=int)
+    page = request.args.get("page", type=int)
+    tab = request.args.get("tab", type=int)
+    if project_id is not None:
+        session["project_id"] = project_id
+    if page is not None:
+        if page < 1:
+            session["image_page"] = 1
+        elif "last_page" in session and page > session["last_page"]:
+            session["image_page"] = session["last_page"]
+        else:
+            session["image_page"] = page
+    if tab is not None:
+        session["tab"] = tab
+
+    return render_template("project.html", images=get_project_images())
+
+
+def get_project_images():
+    images = Image.query.filter_by(project_id=session["project_id"])
+    first_image_on_page = IMAGE_TABLE_MAX_ROWS_DISPLAY * session["image_page"] - 1
+    last_image_on_page = first_image_on_page + IMAGE_TABLE_MAX_ROWS_DISPLAY
+    session["last_page"] = max(math.ceil(images.count() / IMAGE_TABLE_MAX_ROWS_DISPLAY), 1)
+    return images[first_image_on_page:last_image_on_page]
 
 
 @views.route("/run", methods=["POST"])
@@ -129,13 +143,11 @@ def delete_project(project_id):
     return redirect(url_for("views.home"))
 
 
-@views.route("/upload_images/<int:project_id>", methods=["POST"])
+@views.route("/upload_images", methods=["POST"])
 def upload_images(project_id):
-    tab = request.args.get("tab", 1, type=int)
     if "images[]" not in request.files:
-        print("t")
         flash("No file part", category="error")
-        return redirect(url_for("views.project_page", project_id=project_id))
+        return redirect(url_for("views.project"))
 
     images = request.files.getlist("images[]")
     for image in images:
@@ -143,15 +155,15 @@ def upload_images(project_id):
             flash("No selected file", category="error")
             continue
         if image and allowed_file(image.filename):
-            new_image = Image(project_id=project_id, name=image.filename, image=image.read(), date=datetime.now())
+            new_image = Image(project_id=project_id, name=image.filename,
+                              image=image.filename, date=datetime.now())
             db.session.add(new_image)
             db.session.commit()
         else:
             flash("Invalid file format", category="error")
 
     flash("Images uploaded successfully", category="success")
-
-    return redirect(url_for("views.project_page", project_id=project_id, tab=tab))
+    return redirect(url_for("views.project", tab=IMAGE_TAB))
 
 
 def allowed_file(filename):
