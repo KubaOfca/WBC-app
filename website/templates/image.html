@@ -42,7 +42,7 @@
             {{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}
         </td>
         <td>
-            <a href="{{ url_for('views.delete_image', image_id=image.id, tab=3) }}"
+            <a href="{{ url_for('views.delete_image', image_id=image.id) }}"
                onclick="return confirm('Are you sure?');"
                title="Delete image">
                 <i class="material-symbols-outlined" style="font-size:25px; color: red">delete_forever</i>

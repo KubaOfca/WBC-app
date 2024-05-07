@@ -134,6 +134,17 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'bmp'}
 
 
+@views.route("/delete_image/")
+def delete_image():
+    image_id = request.args.get("image_id", type=int)
+    image_to_delete = Image.query.filter_by(id=image_id).first()
+    if image_to_delete:
+        db.session.delete(image_to_delete)
+        db.session.commit()
+        flash("Image successfully deleted", category="success")
+    return redirect(url_for("views.project", tab=3))
+
+
 @views.route("/run", methods=["POST"])
 async def run(project_id):
     model = YOLO(MlModels.query.first().model)
@@ -181,18 +192,6 @@ def delete_project(project_id):
         db.session.commit()
         flash("Project successfully deleted", category="success")
     return redirect(url_for("views.home"))
-
-
-@views.route("/delete_image/<int:image_id>")
-def delete_image(image_id):
-    tab = request.args.get("tab", 1, type=int)
-    image_to_delete = Image.query.filter_by(id=image_id).first()
-    project_id = image_to_delete.project_id
-    if image_to_delete:
-        db.session.delete(image_to_delete)
-        db.session.commit()
-        flash("Image successfully deleted", category="success")
-    return redirect(url_for("views.project_page", project_id=project_id, tab=tab))
 
 
 @views.route("/show_image/<int:image_id>")
