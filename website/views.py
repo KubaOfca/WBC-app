@@ -1,6 +1,7 @@
 import base64
 import json
 import math
+import os
 from datetime import datetime
 from io import BytesIO
 
@@ -88,10 +89,49 @@ def project():
 
 def get_project_images():
     images = Image.query.filter_by(project_id=session["project_id"])
-    first_image_on_page = IMAGE_TABLE_MAX_ROWS_DISPLAY * session["image_page"] - 1
+    first_image_on_page = IMAGE_TABLE_MAX_ROWS_DISPLAY * (session["image_page"] - 1)
     last_image_on_page = first_image_on_page + IMAGE_TABLE_MAX_ROWS_DISPLAY
     session["last_page"] = max(math.ceil(images.count() / IMAGE_TABLE_MAX_ROWS_DISPLAY), 1)
     return images[first_image_on_page:last_image_on_page]
+
+
+@views.route("/upload_images", methods=["POST"])
+def upload_images():
+    if "images[]" not in request.files:
+        flash("No file part", category="error")
+        return redirect(url_for("views.project"))
+
+    images = request.files.getlist("images[]")
+    for image in images:
+        if image.filename == "":
+            flash("No selected file", category="error")
+            continue
+        if image and allowed_file(image.filename):
+            new_image = Image(
+                project_id=session["project_id"],
+                name=image.filename,
+                image=image.filename,
+                date=datetime.now(),
+            )
+            print(os.getcwd())
+            image.save(
+                os.path.join(
+                    "website",
+                    "static",
+                    image.filename,
+                )
+            )
+            db.session.add(new_image)
+            db.session.commit()
+        else:
+            flash("Invalid file format", category="error")
+
+    flash("Images uploaded successfully", category="success")
+    return redirect(url_for("views.project", tab=IMAGE_TAB))
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'bmp'}
 
 
 @views.route("/run", methods=["POST"])
@@ -141,33 +181,6 @@ def delete_project(project_id):
         db.session.commit()
         flash("Project successfully deleted", category="success")
     return redirect(url_for("views.home"))
-
-
-@views.route("/upload_images", methods=["POST"])
-def upload_images(project_id):
-    if "images[]" not in request.files:
-        flash("No file part", category="error")
-        return redirect(url_for("views.project"))
-
-    images = request.files.getlist("images[]")
-    for image in images:
-        if image.filename == "":
-            flash("No selected file", category="error")
-            continue
-        if image and allowed_file(image.filename):
-            new_image = Image(project_id=project_id, name=image.filename,
-                              image=image.filename, date=datetime.now())
-            db.session.add(new_image)
-            db.session.commit()
-        else:
-            flash("Invalid file format", category="error")
-
-    flash("Images uploaded successfully", category="success")
-    return redirect(url_for("views.project", tab=IMAGE_TAB))
-
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'bmp'}
 
 
 @views.route("/delete_image/<int:image_id>")

@@ -1,4 +1,4 @@
-<form action="{{ url_for('views.upload_images', project_id=session['project_id'], page=page, tab=3) }}"
+<form action="{{ url_for('views.upload_images', tab=3) }}"
       method="post"
       enctype="multipart/form-data">
     <div class="mb-3">
@@ -27,7 +27,9 @@
             {{ image.name }}
         </td>
         <td>
-            <img src="{{ image.image }}" style="width: 100px; height: 100px;"/>
+            <a href="{{ url_for('static', filename=image.image) }}" target="_blank">
+                <img src="{{ url_for('static', filename=image.image) }}" style="width: 100px; height: 100px;"/>
+            </a>
         </td>
         <td>
             {% if image.annotated_image is not none %}
