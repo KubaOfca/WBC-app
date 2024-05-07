@@ -4,6 +4,7 @@ import math
 import os
 from datetime import datetime
 
+import pandas as pd
 import plotly
 import plotly.express as px
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
@@ -33,17 +34,14 @@ def home():
     return render_template("home.html", user_projects=get_user_projects())
 
 
-@views.route("/old_project")
-def old_project():
+@views.route("/stats")
+def stats():
+    images = Image.query.filter_by(project_id=session["project_id"])
     stats = Stats.query.filter(Stats.image_id.in_([image.id for image in images]))
-    import pandas as pd
     df = pd.read_sql(stats.statement, db.engine)
-    df = pd.melt(df, id_vars=['id'], var_name='class_name', value_name='value')
-    fig1 = px.bar(df, x="class_name", y="value", title="Wide-Form Input")
+    fig1 = px.bar(df, x="class_name", y="count", title="WBC class counts")
     graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
-    return render_template("project.html", project_id=project_id, images=images_full_info, page=page,
-                           last_page_number=last_page_number, images_len=images_len, tab=tab,
-                           stats=graph1JSON)
+    return graph1JSON
 
 
 @views.route("/project")
@@ -63,7 +61,7 @@ def project():
     if tab is not None:
         session["tab"] = tab
 
-    return render_template("project.html", images=get_project_images())
+    return render_template("project.html", images=get_project_images(), stats=stats())
 
 
 def get_project_images():
@@ -132,7 +130,7 @@ async def run():
     n_images_to_run = images_to_run.count()
     if not n_images_to_run:
         flash("No images to run model", category="error")
-        return redirect(url_for("views.project"))
+        return redirect(url_for("views.project", tab=RUN_TAB))
     progress_bar_step_size = 100 / n_images_to_run
     progress_bar_step = 0
     for image in images_to_run:
@@ -159,7 +157,7 @@ async def run():
             db.session.commit()
     flash("Model successfully run", category="success")
     db.session.close()
-    return redirect(url_for("views.project", tab=RUN_TAB))
+    return redirect(url_for("views.project", tab=STATS_TAB))
 
 
 @views.route("/delete_project/")
