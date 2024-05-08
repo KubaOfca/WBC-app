@@ -22,13 +22,13 @@
     <tr>
         <td>{{ project.id }}</td>
         <td>
-            <a href="{{ url_for('views.project', project_id=project.id, page=1, tab=1) }}">
+            <a href="{{ url_for('project_views.project', project_id=project.id, page=1, tab=1) }}">
                 {{ project.name }}
             </a>
         </td>
         <td>{{ project.date.strftime('%d/%m/%Y %H:%M:%S') }}</td>
         <td>
-            <a href="{{ url_for('views.delete_project', project_id=project.id) }}"
+            <a href="{{ url_for('home_views.delete_project', project_id=project.id) }}"
                onclick="return confirm('Are you sure?');"
                title="Delete project">
                 <i class="material-symbols-outlined" style="font-size:25px; color: red">delete_forever</i>

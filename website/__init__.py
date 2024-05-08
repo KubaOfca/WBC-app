@@ -21,10 +21,12 @@ def create_app():
     session = Session()
     session.init_app(app)
     socket.init_app(app)
-    from .views import views
+    from .home import home_views
+    from .project import project_views
     from .auth import auth
 
-    app.register_blueprint(views, url_prefix="/")
+    app.register_blueprint(home_views, url_prefix="/")
+    app.register_blueprint(project_views, url_prefix="/")
     app.register_blueprint(auth, url_prefix="/")
 
     from .models import User, Project, Image

@@ -1,4 +1,3 @@
-import re
 from base64 import b64encode
 from io import BytesIO
 
@@ -6,12 +5,11 @@ import pyotp
 import qrcode
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, logout_user, login_required
+from validate_email import validate_email
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from . import db
 from .models import User
-
-EMAIL_VALIDATOR_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
 
 auth = Blueprint('auth', __name__)
 
@@ -40,7 +38,7 @@ def verify_mfa():
             if totp.verify(mfa_key):
                 login_user(user, remember=True)
                 flash("Successful Login!", category="success")
-                return redirect(url_for("views.home"))
+                return redirect(url_for("home_views.home"))
             else:
                 flash("Wrong MFA code", category="error")
     return render_template("verify-mfa.html")
@@ -54,7 +52,7 @@ def sign_up():
         password1 = request.form.get("password1")
         password2 = request.form.get("password2")
 
-        if re.match(EMAIL_VALIDATOR_REGEX, email):
+        if not validate_email(email):
             flash("Email address is not valid", category="error")
         elif name is None:
             flash("Name cannot be empty", category="error")
