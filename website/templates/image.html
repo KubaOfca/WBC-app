@@ -24,11 +24,6 @@
     selectElement.addEventListener("change", (event) => {
         event.preventDefault()
         document.getElementById('post-select').submit();
-        if (document.getElementById("batch-select").value === "default") {
-            document.getElementById("image-page-content").style.display = "none";
-        } else {
-            document.getElementById("image-page-content").style.display = "block";
-        }
     });
 </script>
 
