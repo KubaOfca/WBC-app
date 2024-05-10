@@ -1,0 +1,24 @@
+<div class="modal fade" id="create_batch_modal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="editModalLabel">Create new batch</h4>
+            </div>
+            <form action="{{ url_for('project_views.create_batch') }}" method="post"
+                  enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new-batch-name">Batch name:</label>
+                        <input type="text" class="form-control" id="new-batch-name" name="new-batch-name"
+                               placeholder="Enter batch name">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" id="btnUpdate" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

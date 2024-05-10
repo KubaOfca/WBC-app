@@ -10,9 +10,9 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from ultralytics import YOLO
 
 from . import socket, db
-from .models import Image, Stats, MlModels
+from .models import Image, Stats, MlModels, Batch
 from .utils import load_img_as_np_array, get_annotated_image_from_prediction, \
-    get_prediction_stats
+    get_prediction_stats, add_batch_to_db
 
 project_views = Blueprint('project_views', __name__)
 IMAGE_TABLE_MAX_ROWS_DISPLAY = 10
@@ -21,8 +21,13 @@ STATS_TAB = 2
 IMAGE_TAB = 3
 
 
-@project_views.route("/project")
+@project_views.route("/project", methods=["GET", "POST"])
 def project():
+    if request.method == "POST":
+        batch = Batch.query.filter_by(project_id=session["project_id"],
+                                      name=request.form.get("batch-select")).first()
+        session["batch_id"] = batch.id if batch is not None else -1
+        session["batch_name"] = batch.name if batch is not None else "none"
     project_id = request.args.get("project_id", type=int)
     page = request.args.get("page", type=int)
     tab = request.args.get("tab", type=int)
@@ -38,11 +43,13 @@ def project():
     if tab is not None:
         session["tab"] = tab
 
-    return render_template("project.html", images=get_project_images(), stats=stats())
+    return render_template("project.html", images=get_project_images(), stats=stats(), batches=get_batches())
 
 
 def get_project_images():
-    images = Image.query.filter_by(project_id=session["project_id"])
+    images = Image.query.filter_by(project_id=session["project_id"],
+                                   batch_id=session["batch_id"] if "batch_id" in session else -1)
+    print(session["batch_id"] if "batch_id" in session else 10)
     first_image_on_page = IMAGE_TABLE_MAX_ROWS_DISPLAY * (session["image_page"] - 1)
     last_image_on_page = first_image_on_page + IMAGE_TABLE_MAX_ROWS_DISPLAY
     session["total_rows"] = images.count()
@@ -58,6 +65,19 @@ def stats():
     fig1 = px.bar(df, x="class_name", y="count", title="WBC class counts")
     graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
     return graph1JSON
+
+
+def get_batches():
+    batches = Batch.query.filter_by(project_id=session["project_id"])
+    return batches
+
+
+@project_views.route("/create_batch", methods=["POST"])
+def create_batch():
+    if request.method == "POST":
+        add_batch_to_db(session["project_id"], batch_name=request.form.get("new-batch-name"))
+        flash("Batch created!", category="success")
+    return redirect(url_for("project_views.project", tab=3))
 
 
 @project_views.route("/run", methods=["POST"])
@@ -111,11 +131,11 @@ def upload_images():
         if image and allowed_file(image.filename):
             new_image = Image(
                 project_id=session["project_id"],
+                batch_id=session["batch_id"],
                 name=image.filename,
                 image=image.filename,
                 date=datetime.now(),
             )
-            print(os.getcwd())
             image.save(
                 os.path.join(
                     "website",

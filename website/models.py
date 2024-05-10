@@ -26,10 +26,18 @@ class Project(db.Model):
     image = relationship("Image", backref="user", cascade='all, delete')
 
 
+class Batch(db.Model):
+    __tablename__ = 'batch'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
+    name = db.Column(db.String(100))
+
+
 class Image(db.Model):
     __tablename__ = 'image'
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
+    batch_id = db.Column(db.Integer, db.ForeignKey('batch.id'))
     name = db.Column(db.String(100))
     date = db.Column(db.DateTime(timezone=True))
     image = db.Column(db.String(1000))

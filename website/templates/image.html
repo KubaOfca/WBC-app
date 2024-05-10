@@ -1,89 +1,129 @@
-<form action="{{ url_for('project_views.upload_images', tab=3) }}"
-      method="post"
-      enctype="multipart/form-data">
-    <div class="mb-3">
-        <label for="imageUpload" class="form-label">Upload Images</label>
-        <input type="file" class="form-control" id="imageUpload" name="images[]" multiple accept="image/*">
+<div class="input-group mb-3">
+    <div class="input-group-prepend">
+        <a data-toggle="modal" data-target="#create_batch_modal">
+            <button class="btn btn-outline-secondary" type="button">Create new batch</button>
+        </a>
     </div>
-    <button type="submit" class="btn btn-primary">Upload</button>
-</form>
-
-<table id="data" class="table table-striped">
-    <thead>
-    <tr>
-        <th>Id</th>
-        <th>Name</th>
-        <th>Image</th>
-        <th>Annotated Image</th>
-        <th>Date</th>
-        <th>Action</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for image in images %}
-    <tr>
-        <td>{{ image.id }}</td>
-        <td>
-            {{ image.name }}
-        </td>
-        <td>
-            <a href="{{ url_for('static', filename=image.image) }}" target="_blank">
-                <img src="{{ url_for('static', filename=image.image) }}" style="width: 100px; height: 100px;"/>
-            </a>
-        </td>
-        <td>
-            {% if image.annotated_image is not none %}
-            <a href="{{ url_for('static', filename=image.annotated_image) }}" target="_blank">
-                <img src="{{ url_for('static', filename=image.annotated_image) }}"
-                     style="width: 100px; height: 100px;"/>
-            </a>
+    <form id="post-select" action="{{ url_for('project_views.project', project_id=session['project_id'], tab=3) }}"
+          method="post">
+        <select name="batch-select" class="custom-select" id="batch-select">
+            <option value="default">Select batch...</option>
+            {% for batch in batches %}
+            {% if batch.name == session['batch_name'] %}
+            <option value="{{ batch.name }}" selected>{{ batch.name }}</option>
             {% else %}
-            <span class="badge badge-warning">Empty</span>
+            <option value="{{ batch.name }}">{{ batch.name }}</option>
             {% endif %}
-        </td>
-        <td>
-            {{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}
-        </td>
-        <td>
-            <a href="{{ url_for('project_views.delete_image', image_id=image.id) }}"
-               onclick="return confirm('Are you sure?');"
-               title="Delete image">
-                <i class="material-symbols-outlined" style="font-size:25px; color: red">delete_forever</i>
-            </a>
-        </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
-<span class="badge badge-light">Rows: {{ images|length }}</span>
-<br/>
-<span class="badge badge-light">Total Rows: {{ session['total_rows'] }}</span>
-<nav aria-label="Page navigation">
-    <ul class="pagination justify-content-end">
-        <li class="page-item">
-            <a class="page-link" href="{{ url_for('project_views.project', page=1, tab=3) }}">
-                First
-            </a>
-        </li>
-        <li class="page-item">
-            <a class="page-link" href="{{ url_for('project_views.project', page=session['image_page'] - 1, tab=3) }}">
-                {{ session['image_page'] - 1 if session['image_page'] > 1 else "-"}}
-            </a>
-        </li>
-        <li class="page-item active">
-            <a class="page-link" href="{{ url_for('project_views.project', page=session['image_page'], tab=3) }}">
-                {{ session['image_page'] }}
-            </a>
-        </li>
-        <li class="page-item">
-            <a class="page-link" href="{{ url_for('project_views.project', page=session['image_page'] + 1, tab=3) }}">
-                {{ session['image_page'] + 1 if session['image_page'] < session['last_page'] else "-"}}</a>
-        </li>
-        <li class="page-item">
-            <a class="page-link" href="{{ url_for('project_views.project', page=session['last_page'], tab=3) }}">
-                Last
-            </a>
-        </li>
-    </ul>
-</nav>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<script>
+    const selectElement = document.querySelector(".custom-select");
+    selectElement.addEventListener("change", (event) => {
+        event.preventDefault()
+        document.getElementById('post-select').submit();
+        if (document.getElementById("batch-select").value === "default") {
+            document.getElementById("image-page-content").style.display = "none";
+        } else {
+            document.getElementById("image-page-content").style.display = "block";
+        }
+    });
+</script>
+
+<div class="image-page-content" id="image-page-content" style="display: none">
+    <form action="{{ url_for('project_views.upload_images', tab=3) }}"
+          method="post"
+          enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="imageUpload" class="form-label">Upload Images</label>
+            <input type="file" class="form-control" id="imageUpload" name="images[]" multiple accept="image/*">
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+
+
+    <table id="data" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Image</th>
+            <th>Annotated Image</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for image in images %}
+        <tr>
+            <td>{{ image.id }}</td>
+            <td>
+                {{ image.name }}
+            </td>
+            <td>
+                <a href="{{ url_for('static', filename=image.image) }}" target="_blank">
+                    <img src="{{ url_for('static', filename=image.image) }}" style="width: 100px; height: 100px;"/>
+                </a>
+            </td>
+            <td>
+                {% if image.annotated_image is not none %}
+                <a href="{{ url_for('static', filename=image.annotated_image) }}" target="_blank">
+                    <img src="{{ url_for('static', filename=image.annotated_image) }}"
+                         style="width: 100px; height: 100px;"/>
+                </a>
+                {% else %}
+                <span class="badge badge-warning">Empty</span>
+                {% endif %}
+            </td>
+            <td>
+                {{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}
+            </td>
+            <td>
+                <a href="{{ url_for('project_views.delete_image', image_id=image.id) }}"
+                   onclick="return confirm('Are you sure?');"
+                   title="Delete image">
+                    <i class="material-symbols-outlined" style="font-size:25px; color: red">delete_forever</i>
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <span class="badge badge-light">Rows: {{ images|length }}</span>
+    <br/>
+    <span class="badge badge-light">Total Rows: {{ session['total_rows'] }}</span>
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-end">
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('project_views.project', page=1, tab=3) }}">
+                    First
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link"
+                   href="{{ url_for('project_views.project', page=session['image_page'] - 1, tab=3) }}">
+                    {{ session['image_page'] - 1 if session['image_page'] > 1 else "-"}}
+                </a>
+            </li>
+            <li class="page-item active">
+                <a class="page-link" href="{{ url_for('project_views.project', page=session['image_page'], tab=3) }}">
+                    {{ session['image_page'] }}
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link"
+                   href="{{ url_for('project_views.project', page=session['image_page'] + 1, tab=3) }}">
+                    {{ session['image_page'] + 1 if session['image_page'] < session['last_page'] else "-"}}</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('project_views.project', page=session['last_page'], tab=3) }}">
+                    Last
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
 

@@ -7,7 +7,7 @@ from PIL import Image as PILImage
 from flask_login import current_user
 
 from website import db
-from website.models import Project
+from website.models import Project, Batch
 
 
 def get_user_projects():
@@ -21,6 +21,15 @@ def add_project_to_db(user_id: int, project_name: str) -> None:
         date=datetime.now()
     )
     db.session.add(new_project)
+    db.session.commit()
+
+
+def add_batch_to_db(project_id: int, batch_name: str):
+    new_batch = Batch(
+        project_id=project_id,
+        name=batch_name,
+    )
+    db.session.add(new_batch)
     db.session.commit()
 
 
