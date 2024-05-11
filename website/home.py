@@ -23,12 +23,15 @@ def home():
     return render_template("home.html", user_projects=get_user_projects())
 
 
-@home_views.route("/delete_project/")
+@home_views.route("/delete_project/", methods=["GET", "POST"])
 def delete_project():
-    project_id = request.args.get("project_id", type=int)
-    project_to_delete = Project.query.filter_by(id=project_id, user_id=current_user.id).first()
-    if project_to_delete:
-        db.session.delete(project_to_delete)
-        db.session.commit()
-        flash("Project successfully deleted", category="success")
+    if request.method == "POST":
+        projects_id_to_delete = list(map(int, request.form.getlist("project-checkbox")))
+        if not projects_id_to_delete:
+            flash("No projects selected", category="error")
+        else:
+            db.session.query(Project).filter(Project.id.in_(projects_id_to_delete),
+                                             Project.user_id == current_user.id).delete()
+            db.session.commit()
+            flash("Project successfully deleted", category="success")
     return redirect(url_for("home_views.home"))

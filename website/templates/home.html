@@ -8,36 +8,58 @@
     <button type="button" class="btn btn-primary">Create Project</button>
 </a>
 
-<table id="data" class="table table-striped">
-    <thead>
-    <tr>
-        <th>Id</th>
-        <th>Project name</th>
-        <th>Date</th>
-        <th>Action</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for project in user_projects %}
-    <tr>
-        <td>{{ project.id }}</td>
-        <td>
-            <a href="{{ url_for('project_views.project', project_id=project.id, page=1, tab=1) }}">
-                {{ project.name }}
-            </a>
-        </td>
-        <td>{{ project.date.strftime('%d/%m/%Y %H:%M:%S') }}</td>
-        <td>
-            <a href="{{ url_for('home_views.delete_project', project_id=project.id) }}"
-               onclick="return confirm('Are you sure?');"
-               title="Delete project">
-                <i class="material-symbols-outlined" style="font-size:25px; color: red">delete_forever</i>
-            </a>
-        </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+<button type="submit" form="delete_project" class="btn btn-danger" onclick="return confirm('Are you sure?');"
+        title="Delete project">Delete Projects
+</button>
+
+<form method="POST" action="{{ url_for('home_views.delete_project') }}"
+      id="delete_project">
+    <table id="data" class="table table-hover">
+        <thead>
+        <tr>
+            <th>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="select-all" onClick="selectAllProject(this)"
+                           value="">
+                    <label class="form-check-label" for="select-all">Select</label>
+                </div>
+            </th>
+            <th>Id</th>
+            <th>Project name</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for project in user_projects %}
+        <tr>
+            <td>
+
+                <div class="form-check">
+                    <input type="checkbox" name="project-checkbox" class="form-check-input" value="{{ project.id }}">
+                </div>
+
+            </td>
+            <td>{{ project.id }}</td>
+            <td>
+                <a href="{{ url_for('project_views.project', project_id=project.id, page=1, tab=1) }}">
+                    {{ project.name }}
+                </a>
+            </td>
+            <td>{{ project.date.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</form>
+<script>
+    function selectAllProject(source) {
+        checkboxes = document.getElementsByName('project-checkbox');
+        for (var i = 0, n = checkboxes.length; i < n; i++) {
+            checkboxes[i].checked = source.checked;
+        }
+    }
+</script>
 
 <!--Modals-->
 {% include 'modals/create_project_modal.html' %}
