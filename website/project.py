@@ -171,3 +171,12 @@ def delete_image():
             db.session.commit()
             flash("Images successfully deleted", category="success")
     return redirect(url_for("project_views.project", tab=IMAGE_TAB))
+
+
+@project_views.route("/delete_batch/", methods=["GET", "POST"])
+def delete_batch():
+    if request.method == "POST":
+        db.session.query(Batch).filter(Batch.id == session["batch_id"]).delete()
+        db.session.commit()
+        flash("Batch successfully deleted", category="success")
+    return redirect(url_for("project_views.project", tab=IMAGE_TAB))

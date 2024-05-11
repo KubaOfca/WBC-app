@@ -54,7 +54,6 @@
                 <th>Image</th>
                 <th>Annotated Image</th>
                 <th>Date</th>
-                <th>Action</th>
             </tr>
             </thead>
             <tbody>
@@ -87,13 +86,6 @@
                 <td>
                     {{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}
                 </td>
-                <td>
-                    <a href=""
-                       onclick="return confirm('Are you sure?');"
-                       title="Delete image">
-                        <i class="material-symbols-outlined" style="font-size:25px; color: red">delete_forever</i>
-                    </a>
-                </td>
             </tr>
             {% endfor %}
             </tbody>
@@ -101,6 +93,11 @@
         <span class="badge badge-light">Rows: {{ images|length }}</span>
         <br/>
         <span class="badge badge-light">Total Rows: {{ session['total_rows'] }}</span>
+
+        <button type="submit" form="delete_batch" class="btn btn-danger" onclick="return confirm('Are you sure?');"
+                title="Delete batch">Delete batch
+        </button>
+
         <nav aria-label="Page navigation">
             <ul class="pagination justify-content-end">
                 <li class="page-item">
@@ -135,6 +132,9 @@
         </nav>
     </div>
 </form>
+
+<form method="POST" action="{{ url_for('project_views.delete_batch') }}" id="delete_batch"></form>
+
 <script>
     function selectAllImages(source) {
         checkboxes = document.getElementsByName('images-checkbox');
