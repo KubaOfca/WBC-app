@@ -118,12 +118,14 @@ async def run():
 
 
 @project_views.route("/upload_images", methods=["POST"])
-def upload_images():
+async def upload_images():
     if "images[]" not in request.files:
         flash("No file part", category="error")
         return redirect(url_for("project_views.project"))
 
     images = request.files.getlist("images[]")
+    progress_bar_step_size = 100 / len(images)
+    progress_bar_step = 0
     for image in images:
         if image.filename == "":
             flash("No selected file", category="error")
@@ -145,6 +147,8 @@ def upload_images():
             )
             db.session.add(new_image)
             db.session.commit()
+            progress_bar_step += progress_bar_step_size
+            socket.emit("update upload progress", int(math.ceil(progress_bar_step)))
         else:
             flash("Invalid file format", category="error")
 

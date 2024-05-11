@@ -27,17 +27,11 @@
     });
 </script>
 
-<div class="image-page-content" id="image-page-content" style="display: none">
-    <form action="{{ url_for('project_views.upload_images', tab=3) }}"
-          method="post"
-          enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="imageUpload" class="form-label">Upload Images</label>
-            <input type="file" class="form-control" id="imageUpload" name="images[]" multiple accept="image/*">
-        </div>
-        <button type="submit" class="btn btn-primary">Upload</button>
-    </form>
 
+<div class="image-page-content" id="image-page-content" style="display: none">
+    <a data-toggle="modal" data-target="#upload_images_modal">
+        <button type="button" class="btn btn-primary">Upload Images</button>
+    </a>
 
     <table id="data" class="table table-striped">
         <thead>
@@ -121,4 +115,6 @@
     </nav>
 </div>
 
+<!--Modals-->
+{% include 'modals/upload_images_modal.html' %}
 
