@@ -160,12 +160,14 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'bmp'}
 
 
-@project_views.route("/delete_image/")
+@project_views.route("/delete_image/", methods=["GET", "POST"])
 def delete_image():
-    image_id = request.args.get("image_id", type=int)
-    image_to_delete = Image.query.filter_by(id=image_id).first()
-    if image_to_delete:
-        db.session.delete(image_to_delete)
-        db.session.commit()
-        flash("Image successfully deleted", category="success")
+    if request.method == "POST":
+        image_id_to_delete = list(map(int, request.form.getlist("images-checkbox")))
+        if not image_id_to_delete:
+            flash("No images selected", category="error")
+        else:
+            db.session.query(Image).filter(Image.id.in_(image_id_to_delete)).delete()
+            db.session.commit()
+            flash("Images successfully deleted", category="success")
     return redirect(url_for("project_views.project", tab=IMAGE_TAB))
