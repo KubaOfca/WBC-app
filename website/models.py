@@ -56,13 +56,15 @@ class MlModels(db.Model):
     __tablename__ = 'models'
     id = db.Column(db.Integer, primary_key=True)
     model = db.Column(db.String(500))
+    name = db.Column(db.String(100))
 
 
 @event.listens_for(MlModels.__table__, 'after_create')
-def create_departments(*args, **kwargs):
+def init_models(*args, **kwargs):
     for model_path in os.listdir(os.path.join(Path(__file__).parent.parent, "ml_models")):
         if not is_model_exists_in_db(model_path):
-            db.session.add(MlModels(model=os.path.join(Path(__file__).parent.parent, "ml_models", model_path)))
+            db.session.add(
+                MlModels(model=os.path.join(Path(__file__).parent.parent, "ml_models", model_path), name=model_path))
             db.session.commit()
 
 

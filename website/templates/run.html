@@ -1,5 +1,18 @@
 <form id="run-form" action="{{ url_for('project_views.run')}}" method="post"
       enctype="multipart/form-data">
+
+    <select class="selectpicker" id="batch-run-select" name="batch-run-select" multiple data-live-search="true">
+        {% for batch in batches %}
+        <option value="{{ batch.id }}">{{ batch.name }}</option>
+        {% endfor %}
+    </select>
+
+    <select class="selectpicker" id="model-select" name="model-select" data-live-search="true">
+        {% for mlmodel in mlmodels %}
+        <option>{{ mlmodel.name }}</option>
+        {% endfor %}
+    </select>
+
     <button type="submit" class="btn btn-primary">Run</button>
     <div class="progress">
         <div class="progress-bar" id="run-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
@@ -35,3 +48,10 @@
     }
 </script>
 
+
+<script>
+    $(document).ready(function () {
+        $('select').selectpicker();
+    });
+
+</script>

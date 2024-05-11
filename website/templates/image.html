@@ -6,7 +6,7 @@
     </div>
     <form id="post-select" action="{{ url_for('project_views.project', project_id=session['project_id'], tab=3) }}"
           method="post">
-        <select name="batch-select" class="custom-select" id="batch-select">
+        <select name="batch-select" class="selectpicker" id="batch-select">
             <option value="default">Select batch...</option>
             {% for batch in batches %}
             {% if batch.name == session['batch_name'] %}
@@ -21,7 +21,7 @@
 
 
 <script>
-    const selectElement = document.querySelector(".custom-select");
+    const selectElement = document.getElementById("batch-select");
     selectElement.addEventListener("change", (event) => {
         event.preventDefault()
         document.getElementById('post-select').submit();

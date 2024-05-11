@@ -43,13 +43,13 @@ def project():
     if tab is not None:
         session["tab"] = tab
 
-    return render_template("project.html", images=get_project_images(), stats=stats(), batches=get_batches())
+    return render_template("project.html", images=get_project_images(), stats=stats(), batches=get_batches(),
+                           mlmodels=get_ml_models())
 
 
 def get_project_images():
     images = Image.query.filter_by(project_id=session["project_id"],
                                    batch_id=session["batch_id"] if "batch_id" in session else -1)
-    print(session["batch_id"] if "batch_id" in session else 10)
     first_image_on_page = IMAGE_TABLE_MAX_ROWS_DISPLAY * (session["image_page"] - 1)
     last_image_on_page = first_image_on_page + IMAGE_TABLE_MAX_ROWS_DISPLAY
     session["total_rows"] = images.count()
@@ -72,6 +72,11 @@ def get_batches():
     return batches
 
 
+def get_ml_models():
+    ml_models = MlModels.query.all()
+    return ml_models
+
+
 @project_views.route("/create_batch", methods=["POST"])
 def create_batch():
     if request.method == "POST":
@@ -82,38 +87,43 @@ def create_batch():
 
 @project_views.route("/run", methods=["POST"])
 async def run():
-    model = YOLO(MlModels.query.first().model)
-    images_to_run = Image.query.filter_by(project_id=session["project_id"])
-    n_images_to_run = images_to_run.count()
-    if not n_images_to_run:
-        flash("No images to run model", category="error")
-        return redirect(url_for("project_views.project", tab=RUN_TAB))
-    progress_bar_step_size = 100 / n_images_to_run
-    progress_bar_step = 0
-    for image in images_to_run:
-        img_array = load_img_as_np_array(image.image)
-        prediction = model.predict(img_array, stream=False, save=False, verbose=False)
-        progress_bar_step += progress_bar_step_size
-        socket.emit("update progress", int(math.ceil(progress_bar_step)))
-        annotated_image = get_annotated_image_from_prediction(prediction)
-        annotated_image.save(os.path.join(
-            "website",
-            "static",
-            f"annotated_{image.name}",
-        ))
-        image.annotated_image = f"annotated_{image.name}"
-        db.session.commit()
-        prediction_stats = get_prediction_stats(prediction)
-        existing_stats = db.session.query(Stats).filter(Stats.image_id == image.id)
-        if existing_stats is not None:
-            existing_stats.delete()
+    if request.method == "POST":
+        model = YOLO(MlModels.query.filter_by(name=request.form.get("model-select")).first().model)
+        batch_ids = list(map(int, request.form.getlist("batch-run-select")))
+        print(batch_ids)
+        images_to_run = db.session.query(Image).filter(Image.batch_id.in_(batch_ids),
+                                                       Image.project_id == session["project_id"])
+        print(images_to_run)
+        n_images_to_run = images_to_run.count()
+        if not n_images_to_run:
+            flash("No images to run model", category="error")
+            return redirect(url_for("project_views.project", tab=RUN_TAB))
+        progress_bar_step_size = 100 / n_images_to_run
+        progress_bar_step = 0
+        for image in images_to_run:
+            img_array = load_img_as_np_array(image.image)
+            prediction = model.predict(img_array, stream=False, save=False, verbose=False)
+            progress_bar_step += progress_bar_step_size
+            socket.emit("update progress", int(math.ceil(progress_bar_step)))
+            annotated_image = get_annotated_image_from_prediction(prediction)
+            annotated_image.save(os.path.join(
+                "website",
+                "static",
+                f"annotated_{image.name}",
+            ))
+            image.annotated_image = f"annotated_{image.name}"
             db.session.commit()
-        for key, value in prediction_stats.items():
-            new_stats = Stats(image_id=image.id, class_name=key, count=value)
-            db.session.add(new_stats)
-            db.session.commit()
-    flash("Model successfully run", category="success")
-    db.session.close()
+            prediction_stats = get_prediction_stats(prediction)
+            existing_stats = db.session.query(Stats).filter(Stats.image_id == image.id)
+            if existing_stats is not None:
+                existing_stats.delete()
+                db.session.commit()
+            for key, value in prediction_stats.items():
+                new_stats = Stats(image_id=image.id, class_name=key, count=value)
+                db.session.add(new_stats)
+                db.session.commit()
+        flash("Model successfully run", category="success")
+        db.session.close()
     return redirect(url_for("project_views.project", tab=STATS_TAB))
 
 
