@@ -60,14 +60,3 @@ def create_database(app):
         with app.app_context():
             db.create_all()
             print("DB created!")
-
-# def load_ml_models():
-#     for model_path in os.listdir(os.path.join(Path(__file__).parent.parent, "ml_models")):
-#         if not is_model_exists_in_db(model_path):
-#         new_model = MlModels(model=model_path)
-#         db.session.add(new_model)
-#         db.session.commit()
-#
-# def is_model_exists_in_db(model_path):
-#     existing_model = MlModels.query.filter_by(model=model_path).first()
-#     return existing_model is not None
