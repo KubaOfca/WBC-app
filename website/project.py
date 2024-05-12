@@ -274,6 +274,10 @@ def export():
             )
         )
         df = pd.read_sql(export_query.statement, db.engine)
+        with open(os.path.join(tmp_dir, "classes.txt"), "a") as classes_file:
+            model_names = YOLO(MlModels.query.filter_by(name="best.pt").first().model).names
+            for names in model_names.values():
+                classes_file.write(f"{names}\n")
         os.mkdir(os.path.join(tmp_dir, "images"))
         os.mkdir(os.path.join(tmp_dir, "labels"))
         for image_path, data in df.groupby("image"):
