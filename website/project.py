@@ -1,12 +1,15 @@
+import csv
 import json
 import math
 import os
+import shutil
+import tempfile
 from datetime import datetime
 
 import pandas as pd
 import plotly
 import plotly.express as px
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, send_file
 from ultralytics import YOLO
 
 from . import socket, db
@@ -248,7 +251,35 @@ def delete_batch():
 
 @project_views.route("/export", methods=["GET", "POST"])
 def export():
-    if request.method == "POST":
+    with tempfile.TemporaryDirectory() as tmp_dir:
         batch_ids = list(map(int, request.form.getlist("batch-export-select")))
-        db.session.query(Batch).filter(Batch.id == session["batch_id"]).delete()
-        flash("Batch successfully deleted", category="success")
+        export_query = (
+            db
+            .session
+            .query(
+                Stats.id,
+                Stats.class_id,
+                Stats.box_coords,
+                Stats.image_id,
+                Image.image,
+                Image.name,
+                Image.batch_id
+            )
+            .join(
+                Image,
+                Stats.image_id == Image.id
+            )
+            .filter(
+                Image.batch_id.in_(batch_ids)
+            )
+        )
+        df = pd.read_sql(export_query.statement, db.engine)
+        os.mkdir(os.path.join(tmp_dir, "images"))
+        os.mkdir(os.path.join(tmp_dir, "labels"))
+        for image_path, data in df.groupby("image"):
+            shutil.copy(os.path.join("website", "static", image_path), os.path.join(tmp_dir, "images", image_path))
+            data[["class_id", "box_coords"]].to_csv(
+                os.path.join(tmp_dir, "labels", f"{os.path.splitext(image_path)[0]}.txt"), header=False,
+                index=False, sep=" ", doublequote=False, escapechar=' ', quoting=csv.QUOTE_NONE)
+        shutil.make_archive(tmp_dir, "zip", tmp_dir)
+        return send_file(f"{tmp_dir}.zip", as_attachment=True, download_name="results.zip")
