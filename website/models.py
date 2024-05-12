@@ -15,42 +15,91 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(150))
     password = db.Column(db.String(150))
     secret_key = db.Column(db.String(32))
+    project_r = relationship(
+        'Project',
+        back_populates='user',
+        cascade='save-update, merge, delete',
+        passive_deletes=True,
+    )
 
 
 class Project(db.Model):
     __tablename__ = 'project'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     name = db.Column(db.String(100))
     date = db.Column(db.DateTime(timezone=True))
-    image = relationship("Image", backref="user", cascade='all, delete')
+    batch_r = relationship(
+        'Batch',
+        back_populates='project',
+        cascade='save-update, merge, delete',
+        passive_deletes=True,
+    )
+    image_r = relationship(
+        'Image',
+        back_populates='project',
+        cascade='save-update, merge, delete',
+        passive_deletes=True,
+    )
+    user = relationship(
+        'User',
+        back_populates='project_r',
+    )
 
 
 class Batch(db.Model):
     __tablename__ = 'batch'
     id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id', ondelete='CASCADE'))
     name = db.Column(db.String(100))
+    project = relationship(
+        'Project',
+        back_populates='batch_r',
+    )
+    image_r = relationship(
+        'Image',
+        back_populates='batch',
+        cascade='save-update, merge, delete',
+        passive_deletes=True,
+    )
 
 
 class Image(db.Model):
     __tablename__ = 'image'
     id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
-    batch_id = db.Column(db.Integer, db.ForeignKey('batch.id'))
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id', ondelete='CASCADE'))
+    batch_id = db.Column(db.Integer, db.ForeignKey('batch.id', ondelete='CASCADE'))
     name = db.Column(db.String(100))
     date = db.Column(db.DateTime(timezone=True))
     image = db.Column(db.String(1000))
     annotated_image = db.Column(db.String(1000), default=None)
+    project = relationship(
+        'Project',
+        back_populates='image_r',
+    )
+    batch = relationship(
+        'Batch',
+        back_populates='image_r',
+    )
+    stats_r = relationship(
+        'Stats',
+        back_populates='image',
+        cascade='save-update, merge, delete',
+        passive_deletes=True,
+    )
 
 
 class Stats(db.Model):
     __tablename__ = 'stats'
     id = db.Column(db.Integer, primary_key=True)
-    image_id = db.Column(db.Integer, default=0)
+    image_id = db.Column(db.Integer, db.ForeignKey('image.id', ondelete='CASCADE'))
     class_id = db.Column(db.Integer)
     class_name = db.Column(db.String(100), default="Unknown")
     box_coords = db.Column(db.String(100))
+    image = relationship(
+        'Image',
+        back_populates='stats_r',
+    )
 
 
 class MlModels(db.Model):
