@@ -7,7 +7,7 @@ from PIL import Image as PILImage
 from flask_login import current_user
 
 from website import db
-from website.models import Project, Batch
+from website.models import Project, Batch, Stats
 
 
 def get_user_projects():
@@ -52,3 +52,7 @@ def get_prediction_stats(prediction):
         except KeyError:
             stats[class_name] = 1
     return stats
+
+
+def get_unique_wbc_class_names():
+    return [x[0].capitalize() for x in db.session.query(Stats.class_name).distinct()]

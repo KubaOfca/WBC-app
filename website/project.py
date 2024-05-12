@@ -12,13 +12,15 @@ from ultralytics import YOLO
 from . import socket, db
 from .models import Image, Stats, MlModels, Batch
 from .utils import load_img_as_np_array, get_annotated_image_from_prediction, \
-    get_prediction_stats, add_batch_to_db
+    get_prediction_stats, add_batch_to_db, get_unique_wbc_class_names
 
 project_views = Blueprint('project_views', __name__)
 IMAGE_TABLE_MAX_ROWS_DISPLAY = 10
 RUN_TAB = 1
 STATS_TAB = 2
 IMAGE_TAB = 3
+BAR = "Bar"
+PIE = "Pie"
 
 
 @project_views.route("/project", methods=["GET", "POST"])
@@ -28,6 +30,9 @@ def project():
                                       name=request.form.get("batch-select")).first()
         session["batch_id"] = batch.id if batch is not None else -1
         session["batch_name"] = batch.name if batch is not None else "none"
+        session["batch_stats"] = list(map(int, request.form.getlist("batch-stats-select")))
+        session["plot_type"] = request.form.get("plot-type-select")
+        session["wbc_class_names"] = request.form.getlist("wbc-class-select")
     project_id = request.args.get("project_id", type=int)
     page = request.args.get("page", type=int)
     tab = request.args.get("tab", type=int)
@@ -44,7 +49,7 @@ def project():
         session["tab"] = tab
 
     return render_template("project.html", images=get_project_images(), stats=stats(), batches=get_batches(),
-                           mlmodels=get_ml_models())
+                           mlmodels=get_ml_models(), wbc_class_names=get_unique_wbc_class_names())
 
 
 def get_project_images():
@@ -57,14 +62,65 @@ def get_project_images():
     return images[first_image_on_page:last_image_on_page]
 
 
-@project_views.route("/stats")
 def stats():
-    images = Image.query.filter_by(project_id=session["project_id"])
-    stats = Stats.query.filter(Stats.image_id.in_([image.id for image in images]))
-    df = pd.read_sql(stats.statement, db.engine)
-    fig1 = px.bar(df, x="class_name", y="count", title="WBC class counts")
-    graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
-    return graph1JSON
+    if "batch_stats" in session and "plot_type" in session:
+        images = db.session.query(Image).filter(Image.batch_id.in_(session["batch_stats"]),
+                                                Image.project_id == session["project_id"])
+        stats_query = (
+            db
+            .session
+            .query(
+                Stats.id,
+                Stats.image_id,
+                Stats.class_name,
+                Stats.count,
+                Image.batch_id,
+                Batch.name.label("batch_name")
+            )
+            .join(
+                Image,
+                Stats.image_id == Image.id
+            )
+            .join(
+                Batch,
+                Image.batch_id == Batch.id
+            )
+            .filter(
+                Stats.image_id.in_([image.id for image in images])
+            )
+            .filter(
+                Stats.class_name.in_([x.lower() for x in session["wbc_class_names"]])
+            )
+        )
+        df = pd.read_sql(stats_query.statement, db.engine)
+        df_for_plot = df.groupby(["class_name", "batch_name"]).agg({"count": "sum"}).reset_index()
+        if session["plot_type"] == BAR:
+            fig = px.bar(
+                df_for_plot,
+                x="class_name",
+                y="count",
+                color='batch_name',
+                barmode='group',
+                title="WBC class counts",
+                template="plotly",
+                text_auto=True
+            )
+            graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+            return graphJSON
+        elif session["plot_type"] == PIE:
+            fig = px.pie(
+                df_for_plot,
+                values="count",
+                names="class_name",
+                facet_col='batch_name',
+                facet_col_wrap=3,
+                title="WBC class counts",
+                template="plotly",
+            )
+            fig.update_traces(textposition='inside', textinfo='percent+label')
+            graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+            return graphJSON
+    return None
 
 
 def get_batches():
@@ -90,10 +146,8 @@ async def run():
     if request.method == "POST":
         model = YOLO(MlModels.query.filter_by(name=request.form.get("model-select")).first().model)
         batch_ids = list(map(int, request.form.getlist("batch-run-select")))
-        print(batch_ids)
         images_to_run = db.session.query(Image).filter(Image.batch_id.in_(batch_ids),
                                                        Image.project_id == session["project_id"])
-        print(images_to_run)
         n_images_to_run = images_to_run.count()
         if not n_images_to_run:
             flash("No images to run model", category="error")
