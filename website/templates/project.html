@@ -24,6 +24,10 @@
            href="#image_tab_content" role="tab" aria-controls="image" aria-selected="false">
             <i class="material-symbols-outlined">photo_library</i>
             Image</a>
+        <a class="nav-item nav-link {% if session['tab'] == 4 %}active{% endif %}" data-toggle="tab"
+           href="#export_tab_content" role="tab" aria-controls="image" aria-selected="false">
+            <i class="material-symbols-outlined">download</i>
+            Export</a>
     </div>
 </nav>
 
@@ -40,6 +44,11 @@
     <div class="tab-pane fade {% if session['tab'] == 3 %}show active{% endif %}" id="image_tab_content" role="tabpanel"
          aria-labelledby="image-tab">
         {% include 'image.html' %}
+    </div>
+    <div class="tab-pane fade {% if session['tab'] == 4 %}show active{% endif %}" id="export_tab_content"
+         role="tabpanel"
+         aria-labelledby="export-tab">
+        {% include 'export.html' %}
     </div>
 </div>
 

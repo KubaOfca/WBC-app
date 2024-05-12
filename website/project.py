@@ -73,7 +73,6 @@ def stats():
                 Stats.id,
                 Stats.image_id,
                 Stats.class_name,
-                Stats.count,
                 Image.batch_id,
                 Batch.name.label("batch_name")
             )
@@ -93,6 +92,7 @@ def stats():
             )
         )
         df = pd.read_sql(stats_query.statement, db.engine)
+        df['count'] = df.groupby(["class_name", "batch_name"])['id'].transform('count')
         df_for_plot = df.groupby(["class_name", "batch_name"]).agg({"count": "sum"}).reset_index()
         if session["plot_type"] == BAR:
             fig = px.bar(
@@ -172,8 +172,8 @@ async def run():
             if existing_stats is not None:
                 existing_stats.delete()
                 db.session.commit()
-            for key, value in prediction_stats.items():
-                new_stats = Stats(image_id=image.id, class_name=key, count=value)
+            for class_id, class_name, box_coords in prediction_stats:
+                new_stats = Stats(image_id=image.id, class_id=class_id, class_name=class_name, box_coords=box_coords)
                 db.session.add(new_stats)
                 db.session.commit()
         flash("Model successfully run", category="success")
@@ -224,7 +224,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'bmp'}
 
 
-@project_views.route("/delete_image/", methods=["GET", "POST"])
+@project_views.route("/delete_image", methods=["GET", "POST"])
 def delete_image():
     if request.method == "POST":
         image_id_to_delete = list(map(int, request.form.getlist("images-checkbox")))
@@ -237,10 +237,18 @@ def delete_image():
     return redirect(url_for("project_views.project", tab=IMAGE_TAB))
 
 
-@project_views.route("/delete_batch/", methods=["GET", "POST"])
+@project_views.route("/delete_batch", methods=["GET", "POST"])
 def delete_batch():
     if request.method == "POST":
         db.session.query(Batch).filter(Batch.id == session["batch_id"]).delete()
         db.session.commit()
         flash("Batch successfully deleted", category="success")
     return redirect(url_for("project_views.project", tab=IMAGE_TAB))
+
+
+@project_views.route("/export", methods=["GET", "POST"])
+def export():
+    if request.method == "POST":
+        batch_ids = list(map(int, request.form.getlist("batch-export-select")))
+        db.session.query(Batch).filter(Batch.id == session["batch_id"]).delete()
+        flash("Batch successfully deleted", category="success")

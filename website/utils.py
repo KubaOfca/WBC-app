@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import Dict
+from typing import List
 
 import numpy as np
 from PIL import Image as PILImage
@@ -44,13 +44,12 @@ def get_annotated_image_from_prediction(prediction) -> PILImage.Image:
 def get_prediction_stats(prediction):
     classes_id_to_names_map = prediction[0].names
     prediction_class_ids = prediction[0].boxes.cls
-    stats: Dict[str, int] = {}
-    for prediction_class_id in prediction_class_ids:
+    stats: List = []
+    for n, prediction_class_id in enumerate(prediction_class_ids):
         class_name = classes_id_to_names_map[int(prediction_class_id)].replace(" ", "_").lower()
-        try:
-            stats[class_name] += 1
-        except KeyError:
-            stats[class_name] = 1
+        box_coords_tensor = prediction[0].boxes.xywhn[n]
+        box_coords_str = " ".join([str(float(x)) for x in box_coords_tensor])
+        stats.append([int(prediction_class_id), class_name, box_coords_str])
     return stats
 
 

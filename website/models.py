@@ -48,8 +48,9 @@ class Stats(db.Model):
     __tablename__ = 'stats'
     id = db.Column(db.Integer, primary_key=True)
     image_id = db.Column(db.Integer, default=0)
+    class_id = db.Column(db.Integer)
     class_name = db.Column(db.String(100), default="Unknown")
-    count = db.Column(db.Integer, default=0)
+    box_coords = db.Column(db.String(100))
 
 
 class MlModels(db.Model):
