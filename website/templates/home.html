@@ -2,50 +2,53 @@
 {% block title %}Home{% endblock%}
 {% block content %}
 
-<h1>Welcome {{ session['user_name'] }}</h1>
+<h2 style="text-align: center; padding-top: 10px">👋 Welcome {{ session['user_name'] }}!</h2>
+<div style="text-align: center;">
+    <span style="color: gray; font-size: 12px">Create or choose your projects</span>
+</div>
+<hr/>
+<div style="text-align: right; padding-bottom: 15px">
+    <a data-toggle="modal" data-target="#create_project_modal">
+        <button type="button" class="btn btn-primary" style="">Create Project</button>
+    </a>
 
-<a data-toggle="modal" data-target="#create_project_modal">
-    <button type="button" class="btn btn-primary">Create Project</button>
-</a>
+    <button type="submit" form="delete_project" class="btn btn-danger" onclick="return confirm('Are you sure?');"
+            title="Delete project">Delete Projects
+    </button>
+</div>
 
-<button type="submit" form="delete_project" class="btn btn-danger" onclick="return confirm('Are you sure?');"
-        title="Delete project">Delete Projects
-</button>
 
 <form method="POST" action="{{ url_for('home_views.delete_project') }}"
       id="delete_project">
-    <table id="data" class="table table-hover">
+    <table id="data" class="table table-hover" style="text-align: center">
         <thead>
         <tr>
             <th>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="select-all" onClick="selectAllProject(this)"
-                           value="">
-                    <label class="form-check-label" for="select-all">Select</label>
+                    <input class="form-check-input" type="checkbox" id="select-all" onClick="selectAllProject(this)">
+                    <label class="form-check-label" for="select-all"></label>
                 </div>
             </th>
-            <th>Id</th>
             <th>Project name</th>
             <th>Date</th>
+            <th>Action</th>
         </tr>
         </thead>
         <tbody>
         {% for project in user_projects %}
         <tr>
             <td>
-
                 <div class="form-check">
                     <input type="checkbox" name="project-checkbox" class="form-check-input" value="{{ project.id }}">
                 </div>
-
             </td>
-            <td>{{ project.id }}</td>
             <td>
-                <a href="{{ url_for('project_views.project', project_id=project.id, page=1, tab=1) }}">
-                    {{ project.name }}
-                </a>
+                <span class="badge badge-secondary">{{ project.name }}</span>
             </td>
-            <td>{{ project.date.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+            <td><span class="badge badge-secondary">{{ project.date.strftime('%d/%m/%Y | %H:%M:%S') }}</span></td>
+            <td><a href="{{ url_for('project_views.project', project_id=project.id, page=1, tab=1) }}">
+                <button type="button" class="btn btn-primary" style="height: 30px; font-size: 12px">View</button>
+            </a></td>
         </tr>
         {% endfor %}
         </tbody>
