@@ -1,19 +1,18 @@
 <form id="stats-form" action="{{ url_for('project_views.project', tab=2)}}" method="post"
       enctype="multipart/form-data">
 
-    <select class="selectpicker" id="batch-stats-select" name="batch-stats-select" multiple data-live-search="true">
+    <select class="selectpicker" id="batch-stats-select" name="batch-stats-select" multiple data-live-search="true" title="Choose batches...">
         {% for batch in batches %}
         <option value="{{ batch.id }}">{{ batch.name }}</option>
         {% endfor %}
     </select>
 
-    <select class="selectpicker" id="plot-type-select" name="plot-type-select" data-live-search="true">
-        <option value="" selected>Select plot type...</option>
+    <select class="selectpicker" id="plot-type-select" name="plot-type-select" data-live-search="true" title="Choose plot type...">
         <option value="Bar">Bar</option>
         <option value="Pie">Pie</option>
     </select>
 
-    <select class="selectpicker" id="wbc-class-select" name="wbc-class-select" multiple data-live-search="true">
+    <select class="selectpicker" id="wbc-class-select" name="wbc-class-select" multiple data-live-search="true" title="Choose wbc classes...">
         {% for wbc_class_name in wbc_class_names %}
         <option value="{{ wbc_class_name }}" selected>{{ wbc_class_name }}</option>
         {% endfor %}

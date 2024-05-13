@@ -1,13 +1,12 @@
 <form id="run-form" action="{{ url_for('project_views.run')}}" method="post"
       enctype="multipart/form-data">
-
-    <select class="selectpicker" id="batch-run-select" name="batch-run-select" multiple data-live-search="true">
+    <select class="selectpicker" id="batch-run-select" name="batch-run-select" multiple
+            title="Choose batches..." data-live-search="true">
         {% for batch in batches %}
         <option value="{{ batch.id }}">{{ batch.name }}</option>
         {% endfor %}
     </select>
-
-    <select class="selectpicker" id="model-select" name="model-select" data-live-search="true">
+    <select class="selectpicker" id="model-select" name="model-select" data-live-search="true" title="Choose model...">
         {% for mlmodel in mlmodels %}
         <option>{{ mlmodel.name }}</option>
         {% endfor %}
