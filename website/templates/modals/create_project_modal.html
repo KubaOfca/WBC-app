@@ -2,15 +2,20 @@
      aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="editModalLabel">Create new project</h4>
+            <div class="modal-header text-center">
+                <h3 class="modal-title w-100" id="editModalLabel">
+                    <span class="material-symbols-outlined" style="color: limegreen">
+                        add_circle
+                    </span>
+                    Create new project
+                </h3>
+
             </div>
             <form method="POST">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="new-project-name">Project name:</label>
                         <input type="text" class="form-control" id="new-project-name" name="new-project-name"
-                               placeholder="Enter project name">
+                               placeholder="Enter new project name...">
                     </div>
                 </div>
                 <div class="modal-footer">

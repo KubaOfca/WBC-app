@@ -2,8 +2,14 @@
      aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="editModalLabel">Upload images</h4>
+            <div class="modal-header text-center">
+                <h3 class="modal-title w-100" id="editModalLabel">
+                    <span class="material-symbols-outlined" style="color: limegreen">
+                        upload_file
+                    </span>
+                    Upload images
+                </h3>
+
             </div>
             <form action="{{ url_for('project_views.upload_images', tab=3) }}" method="post"
                   enctype="multipart/form-data">

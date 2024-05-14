@@ -36,7 +36,7 @@
                 title="Delete project">Delete Images
         </button>
 
-        <table id="data" class="table table-hover">
+        <table id="data" class="table table-hover table-striped" style="text-align: center">
             <thead>
             <tr>
                 <th>
@@ -46,7 +46,6 @@
                         <label class="form-check-label" for="select-all"></label>
                     </div>
                 </th>
-                <th>Id</th>
                 <th>Name</th>
                 <th>Image</th>
                 <th>Annotated Image</th>
@@ -61,9 +60,8 @@
                         <input type="checkbox" name="images-checkbox" class="form-check-input" value="{{ image.id }}">
                     </div>
                 </td>
-                <td>{{ image.id }}</td>
                 <td>
-                    {{ image.name }}
+                    <span class="badge badge-secondary">{{ image.name }}</span>
                 </td>
                 <td>
                     <a href="{{ url_for('static', filename=image.image) }}" target="_blank">
@@ -77,11 +75,11 @@
                              style="width: 100px; height: 100px;"/>
                     </a>
                     {% else %}
-                    <span class="badge badge-warning">Empty</span>
+                    <span class="badge badge-warning">No annotation</span>
                     {% endif %}
                 </td>
                 <td>
-                    {{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}
+                    <span class="badge badge-secondary">{{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}</span>
                 </td>
             </tr>
             {% endfor %}
