@@ -1,7 +1,7 @@
 <form id="stats-form" action="{{ url_for('project_views.project', tab=2)}}" method="post"
       enctype="multipart/form-data">
-
-    <select class="selectpicker" id="batch-stats-select" name="batch-stats-select" multiple data-live-search="true" title="Choose batches...">
+    <div style="text-align: center">
+            <select class="selectpicker" id="batch-stats-select" name="batch-stats-select" multiple data-live-search="true" title="Choose batches...">
         {% for batch in batches %}
         <option value="{{ batch.id }}">{{ batch.name }}</option>
         {% endfor %}
@@ -18,7 +18,14 @@
         {% endfor %}
     </select>
 
-    <button type="submit" class="btn btn-primary">Reload</button>
+    <button type="submit" class="btn btn-primary">
+        <i class="material-symbols-outlined" style="font-size:15px;">
+            refresh
+        </i>
+        Reload
+    </button>
+    </div>
+
 </form>
 
 <script>

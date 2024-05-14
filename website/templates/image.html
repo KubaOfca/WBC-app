@@ -1,19 +1,20 @@
-<a data-toggle="modal" data-target="#create_batch_modal">
-    <button class="btn btn-outline-secondary" type="button">Create new batch</button>
-</a>
-
 <form id="post-select" action="{{ url_for('project_views.project', project_id=session['project_id'], tab=3) }}"
       method="post">
-    <select name="batch-select" class="selectpicker" id="batch-select">
-        <option value="default">Choose batch...</option>
-        {% for batch in batches %}
-        {% if batch.name == session['batch_name'] %}
-        <option value="{{ batch.name }}" selected>{{ batch.name }}</option>
-        {% else %}
-        <option value="{{ batch.name }}">{{ batch.name }}</option>
-        {% endif %}
-        {% endfor %}
-    </select>
+    <div style="text-align: center">
+        <select name="batch-select" class="selectpicker" id="batch-select" title="Choose batch...">
+            <option value="default">Choose batch...</option>
+            {% for batch in batches %}
+            {% if batch.name == session['batch_name'] %}
+            <option value="{{ batch.name }}" selected>{{ batch.name }}</option>
+            {% else %}
+            <option value="{{ batch.name }}">{{ batch.name }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+        <a data-toggle="modal" data-target="#create_batch_modal">
+            <button class="btn btn-primary" type="button">Create new batch</button>
+        </a>
+    </div>
 </form>
 
 
@@ -28,13 +29,17 @@
 <form method="POST" action="{{ url_for('project_views.delete_image') }}"
       id="delete_images">
     <div class="image-page-content" id="image-page-content" style="display: none">
-        <a data-toggle="modal" data-target="#upload_images_modal">
-            <button type="button" class="btn btn-primary">Upload Images</button>
-        </a>
+        <hr/>
+        <div style="text-align: right; padding-bottom: 15px; padding-top: 15px">
+            <a data-toggle="modal" data-target="#upload_images_modal">
+                <button type="button" class="btn btn-primary">Upload Images</button>
+            </a>
 
-        <button type="submit" form="delete_images" class="btn btn-danger" onclick="return confirm('Are you sure?');"
-                title="Delete project">Delete Images
-        </button>
+            <button type="submit" form="delete_images" class="btn btn-danger" onclick="return confirm('Are you sure?');"
+                    title="Delete project">Delete Images
+            </button>
+        </div>
+
 
         <table id="data" class="table table-hover table-striped" style="text-align: center">
             <thead>

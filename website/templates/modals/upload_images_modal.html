@@ -37,12 +37,13 @@
 </div>
 
 
-<script type="text/javascript">
-    const socket = io();
-    socket.connect("http://127.0.0.1:5000");
-    let upload_bar = document.getElementById("upload-bar")
-    socket.on("update upload progress", function (percent) {
-        upload_bar.style.width = percent + "%";
-        upload_bar.innerHTML = upload_bar.style.width;
-    })
-</script>
+<!--<script type="text/javascript">-->
+<!--    const socket = io();-->
+<!--    socket.connect("http://127.0.0.1:5000");-->
+<!--    let upload_bar = document.getElementById("upload-bar")-->
+<!--    socket.on("update upload progress", function (percent) {-->
+<!--        console.log("get percent" + percent);-->
+<!--        upload_bar.style.width = percent + "%";-->
+<!--        upload_bar.innerHTML = upload_bar.style.width;-->
+<!--    })-->
+<!--</script>-->

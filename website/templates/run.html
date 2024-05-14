@@ -1,20 +1,30 @@
 <form id="run-form" action="{{ url_for('project_views.run')}}" method="post"
       enctype="multipart/form-data">
-    <select class="selectpicker" id="batch-run-select" name="batch-run-select" multiple
-            title="Choose batches..." data-live-search="true">
-        {% for batch in batches %}
-        <option value="{{ batch.id }}">{{ batch.name }}</option>
-        {% endfor %}
-    </select>
-    <select class="selectpicker" id="model-select" name="model-select" data-live-search="true" title="Choose model...">
-        {% for mlmodel in mlmodels %}
-        <option>{{ mlmodel.name }}</option>
-        {% endfor %}
-    </select>
+    <div style="text-align: center">
+        <select class="selectpicker" id="batch-run-select" name="batch-run-select" multiple
+                title="Choose batches..." data-live-search="true">
+            {% for batch in batches %}
+            <option value="{{ batch.id }}">{{ batch.name }}</option>
+            {% endfor %}
+        </select>
+        <select class="selectpicker" id="model-select" name="model-select" data-live-search="true"
+                title="Choose model...">
+            {% for mlmodel in mlmodels %}
+            <option>{{ mlmodel.name }}</option>
+            {% endfor %}
+        </select>
 
-    <button type="submit" class="btn btn-primary">Run</button>
-    <div class="progress">
-        <div class="progress-bar" id="run-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
+        <button type="submit" class="btn btn-primary">
+            <i class="material-symbols-outlined" style="font-size:15px;">
+                play_arrow
+            </i>
+            Run
+        </button>
+    </div>
+    <br/>
+    <div class="progress mx-auto" style="width: 50%; height: 20px">
+        <div class="progress-bar" id="run-bar" role="progressbar" style="width: 0%"
+             aria-valuenow="0"
              aria-valuemin="0"
              aria-valuemax="100">0%
         </div>
@@ -43,6 +53,12 @@
             console.log("get percent" + percent);
             run_bar.style.width = percent + "%";
             run_bar.innerHTML = run_bar.style.width;
+        })
+        let upload_bar = document.getElementById("upload-bar")
+        socket.on("update upload progress", function (percent) {
+            console.log("get percent" + percent);
+            upload_bar.style.width = percent + "%";
+            upload_bar.innerHTML = upload_bar.style.width;
         })
     }
 </script>

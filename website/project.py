@@ -4,6 +4,7 @@ import math
 import os
 import shutil
 import tempfile
+import time
 from datetime import datetime
 
 import pandas as pd
@@ -155,13 +156,13 @@ async def run():
         if not n_images_to_run:
             flash("No images to run model", category="error")
             return redirect(url_for("project_views.project", tab=RUN_TAB))
-        progress_bar_step_size = 100 / n_images_to_run
+        progress_bar_step_size = int(math.ceil(100 / n_images_to_run))
         progress_bar_step = 0
         for image in images_to_run:
             img_array = load_img_as_np_array(image.image)
             prediction = model.predict(img_array, stream=False, save=False, verbose=False)
             progress_bar_step += progress_bar_step_size
-            socket.emit("update progress", int(math.ceil(progress_bar_step)))
+            socket.emit("update progress", min(progress_bar_step, 100))
             annotated_image = get_annotated_image_from_prediction(prediction)
             annotated_image.save(os.path.join(
                 "website",
@@ -191,7 +192,7 @@ async def upload_images():
         return redirect(url_for("project_views.project"))
 
     images = request.files.getlist("images[]")
-    progress_bar_step_size = 100 / len(images)
+    progress_bar_step_size = int(math.ceil(100 / len(images)))
     progress_bar_step = 0
     for image in images:
         if image.filename == "":
@@ -215,7 +216,8 @@ async def upload_images():
             db.session.add(new_image)
             db.session.commit()
             progress_bar_step += progress_bar_step_size
-            socket.emit("update upload progress", int(math.ceil(progress_bar_step)))
+            socket.emit("update upload progress", min(progress_bar_step, 100))
+            time.sleep(0.2)
         else:
             flash("Invalid file format", category="error")
 
