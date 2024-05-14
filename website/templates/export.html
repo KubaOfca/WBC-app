@@ -1,13 +1,16 @@
 <form id="stats-form" action="{{ url_for('project_views.export', tab=4)}}" method="post"
       enctype="multipart/form-data">
+    <div style="text-align: center;">
+        <select class="selectpicker" id="batch-export-select" name="batch-export-select" multiple
+                data-live-search="true" title="Choose batches...">
+            {% for batch in batches %}
+            <option value="{{ batch.id }}">{{ batch.name }}</option>
+            {% endfor %}
+        </select>
 
-    <select class="selectpicker" id="batch-export-select" name="batch-export-select" multiple data-live-search="true">
-        {% for batch in batches %}
-        <option value="{{ batch.id }}">{{ batch.name }}</option>
-        {% endfor %}
-    </select>
+        <button type="submit" class="btn btn-primary">Export annotations</button>
+    </div>
 
-    <button type="submit" class="btn btn-primary">Export annotations</button>
 </form>
 
 <script>

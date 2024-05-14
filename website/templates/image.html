@@ -2,7 +2,7 @@
       method="post">
     <div style="text-align: center">
         <select name="batch-select" class="selectpicker" id="batch-select" title="Choose batch...">
-            <option value="default">Choose batch...</option>
+            <option value="default" selected>Choose batch...</option>
             {% for batch in batches %}
             {% if batch.name == session['batch_name'] %}
             <option value="{{ batch.name }}" selected>{{ batch.name }}</option>
@@ -12,7 +12,12 @@
             {% endfor %}
         </select>
         <a data-toggle="modal" data-target="#create_batch_modal">
-            <button class="btn btn-primary" type="button">Create new batch</button>
+            <button class="btn btn-primary" type="button">
+                <i class="material-symbols-outlined" style="font-size:20px">
+                    add
+                </i>
+                Create batch
+            </button>
         </a>
     </div>
 </form>
@@ -29,17 +34,36 @@
 <form method="POST" action="{{ url_for('project_views.delete_image') }}"
       id="delete_images">
     <div class="image-page-content" id="image-page-content" style="display: none">
-        <hr/>
-        <div style="text-align: right; padding-bottom: 15px; padding-top: 15px">
-            <a data-toggle="modal" data-target="#upload_images_modal">
-                <button type="button" class="btn btn-primary">Upload Images</button>
-            </a>
+        <hr style="height: 3px;  margin: 20px 0; background-color: gray;"/>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 5px">
+            <div>
+                <span class="badge badge-light" style="display: block; text-align: left;">
+                    Rows on page: {{ images|length }}
+                </span>
+                <span class="badge badge-light" style="display: block; text-align: left">
+                    Total Rows: {{ session['total_rows'] }}
+                </span>
 
-            <button type="submit" form="delete_images" class="btn btn-danger" onclick="return confirm('Are you sure?');"
-                    title="Delete project">Delete Images
-            </button>
+            </div>
+            <div style="padding-bottom: 15px; padding-top: 15px">
+                <a data-toggle="modal" data-target="#upload_images_modal">
+                    <button type="button" class="btn btn-primary">
+                        <i class="material-symbols-outlined" style="font-size:20px;">
+                            upload_file
+                        </i>
+                        Upload images
+                    </button>
+                </a>
+                <button type="submit" form="delete_images" class="btn btn-danger"
+                        onclick="return confirm('Are you sure?');"
+                        title="Delete project">
+                    <i class="material-symbols-outlined" style="font-size:20px;">
+                        delete_forever
+                    </i>
+                    Delete images
+                </button>
+            </div>
         </div>
-
 
         <table id="data" class="table table-hover table-striped" style="text-align: center">
             <thead>
@@ -84,52 +108,57 @@
                     {% endif %}
                 </td>
                 <td>
-                    <span class="badge badge-secondary">{{ image.date.strftime('%d/%m/%Y %H:%M:%S') }}</span>
+                    <span class="badge badge-secondary">{{ image.date.strftime('%d/%m/%Y | %H:%M:%S') }}</span>
                 </td>
             </tr>
             {% endfor %}
             </tbody>
         </table>
-        <span class="badge badge-light">Rows: {{ images|length }}</span>
-        <br/>
-        <span class="badge badge-light">Total Rows: {{ session['total_rows'] }}</span>
 
-        <button type="submit" form="delete_batch" class="btn btn-danger" onclick="return confirm('Are you sure?');"
-                title="Delete batch">Delete batch
-        </button>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px">
+            <button type="submit" form="delete_batch" class="btn btn-danger"
+                    onclick="return confirm('Are you sure?');"
+                    title="Delete batch">
+                <i class="material-symbols-outlined" style="font-size:20px;">
+                    delete_forever
+                </i>
+                Delete batch
+            </button>
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-end">
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('project_views.project', page=1, tab=3) }}">
+                            First
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{{ url_for('project_views.project', page=session['image_page'] - 1, tab=3) }}">
+                            {{ session['image_page'] - 1 if session['image_page'] > 1 else "-"}}
+                        </a>
+                    </li>
+                    <li class="page-item active">
+                        <a class="page-link"
+                           href="{{ url_for('project_views.project', page=session['image_page'], tab=3) }}">
+                            {{ session['image_page'] }}
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{{ url_for('project_views.project', page=session['image_page'] + 1, tab=3) }}">
+                            {{ session['image_page'] + 1 if session['image_page'] < session['last_page'] else "-"}}</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{{ url_for('project_views.project', page=session['last_page'], tab=3) }}">
+                            Last
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
 
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-end">
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('project_views.project', page=1, tab=3) }}">
-                        First
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link"
-                       href="{{ url_for('project_views.project', page=session['image_page'] - 1, tab=3) }}">
-                        {{ session['image_page'] - 1 if session['image_page'] > 1 else "-"}}
-                    </a>
-                </li>
-                <li class="page-item active">
-                    <a class="page-link"
-                       href="{{ url_for('project_views.project', page=session['image_page'], tab=3) }}">
-                        {{ session['image_page'] }}
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link"
-                       href="{{ url_for('project_views.project', page=session['image_page'] + 1, tab=3) }}">
-                        {{ session['image_page'] + 1 if session['image_page'] < session['last_page'] else "-"}}</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link"
-                       href="{{ url_for('project_views.project', page=session['last_page'], tab=3) }}">
-                        Last
-                    </a>
-                </li>
-            </ul>
-        </nav>
+
     </div>
 </form>
 

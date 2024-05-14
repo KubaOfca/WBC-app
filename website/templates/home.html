@@ -6,14 +6,21 @@
 <div style="text-align: center;">
     <span style="color: gray; font-size: 12px">Create or choose your projects</span>
 </div>
-<hr/>
+<hr style="height: 3px;  margin: 20px 0; background-color: gray;"/>
 <div style="text-align: right; padding-bottom: 15px">
     <a data-toggle="modal" data-target="#create_project_modal">
-        <button type="button" class="btn btn-primary" style="">Create Project</button>
+        <button class="btn btn-primary" type="button">
+            <i class="material-symbols-outlined" style="font-size:20px;">
+                add
+            </i>
+            Create project
+        </button>
     </a>
 
     <button type="submit" form="delete_project" class="btn btn-danger" onclick="return confirm('Are you sure?');"
-            title="Delete project">Delete Projects
+            title="Delete project"><i class="material-symbols-outlined" style="font-size:20px">
+        delete_forever
+    </i>Delete Projects
     </button>
 </div>
 

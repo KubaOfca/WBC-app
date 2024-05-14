@@ -31,39 +31,6 @@
     </div>
 </form>
 
-<script type="text/javascript">
-    window.onload = function () {
-        if (document.getElementById("batch-select").value === "default") {
-            document.getElementById("image-page-content").style.display = "none";
-        } else {
-            document.getElementById("image-page-content").style.display = "block";
-        }
-        const socket = io();
-        const loading = document.getElementById("spinner");
-        socket.connect("http://127.0.0.1:5000");
-        socket.on("connect", function () {
-            console.log("Connect!");
-            loading.style.opacity = "0";
-            setTimeout(() => {
-                loading.style.display = "none";
-            }, 500)
-        })
-        let run_bar = document.getElementById("run-bar")
-        socket.on("update progress", function (percent) {
-            console.log("get percent" + percent);
-            run_bar.style.width = percent + "%";
-            run_bar.innerHTML = run_bar.style.width;
-        })
-        let upload_bar = document.getElementById("upload-bar")
-        socket.on("update upload progress", function (percent) {
-            console.log("get percent" + percent);
-            upload_bar.style.width = percent + "%";
-            upload_bar.innerHTML = upload_bar.style.width;
-        })
-    }
-</script>
-
-
 <script>
     $(document).ready(function () {
         $('select').selectpicker();
