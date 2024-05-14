@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+<!-- Login 5 - Bootstrap Brain Component -->
+<section class="p-3 p-md-4 p-xl-5 h-100"> <!-- Added h-100 to make sure it fills the entire height -->
+    <div class="container h-100"> <!-- Added h-100 to make sure it fills the entire height -->
+        <div class="card border-light-subtle shadow-sm h-100">
+            <!-- Added h-100 to make sure it fills the entire height -->
+            <div class="row g-0 h-100"> <!-- Added h-100 to make sure it fills the entire height -->
+                <div class="col-12 col-md-6 text-bg-primary">
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <div class="col-10 col-xl-8 py-3">
+                            <h2 class="h1 mb-4" style="font-family: Audiowide, sans-serif; text-align: center;">WBC
+                                Scan</h2>
+                            <hr class="border-primary-subtle mb-4">
+                            <img class="img-fluid rounded mb-4" loading="lazy" src="../static/wbc_logo.png"
+                                 width="245" height="80" alt="BootstrapBrain Logo" style="display: block; margin: auto">
+                            <p class="lead m-0">Instantly identify white blood cell</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    {% block before_home_content %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{% endblock%}
