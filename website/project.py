@@ -226,7 +226,7 @@ async def upload_images():
 
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'bmp'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'bmp', 'tif'}
 
 
 @project_views.route("/delete_image", methods=["GET", "POST"])
