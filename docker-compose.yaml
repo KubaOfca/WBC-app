@@ -1,0 +1,25 @@
+version: '3.0'
+services:
+  wbc-scan-db:
+    image: postgres
+    container_name: wbc-scan-db
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env.dev
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  wbc-scan-app:
+    container_name: wbc-scan-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8008:5000"
+    depends_on:
+      - wbc-scan-db
+
+volumes:
+  db_data:

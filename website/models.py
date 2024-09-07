@@ -1,8 +1,4 @@
-import os
-from pathlib import Path
-
 from flask_login import UserMixin
-from sqlalchemy import event
 from sqlalchemy.orm import relationship
 
 from . import db
@@ -13,7 +9,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True)
     name = db.Column(db.String(150))
-    password = db.Column(db.String(150))
+    password = db.Column(db.String(250))
     secret_key = db.Column(db.String(32))
     project_r = relationship(
         'Project',
@@ -109,13 +105,13 @@ class MlModels(db.Model):
     name = db.Column(db.String(100))
 
 
-@event.listens_for(MlModels.__table__, 'after_create')
-def init_models(*args, **kwargs):
-    for model_path in os.listdir(os.path.join(Path(__file__).parent.parent, "ml_models")):
-        if not is_model_exists_in_db(model_path):
-            db.session.add(
-                MlModels(model=os.path.join(Path(__file__).parent.parent, "ml_models", model_path), name=model_path))
-            db.session.commit()
+# @event.listens_for(MlModels.__table__, 'after_create')
+# def init_models(*args, **kwargs):
+#     for model_path in os.listdir(os.path.join(Path(__file__).parent.parent, "ml_models")):
+#         # if not is_model_exists_in_db(model_path):
+#         db.session.add(
+#             MlModels(model=os.path.join(Path(__file__).parent.parent, "ml_models", model_path), name=model_path))
+#         db.session.commit()
 
 
 def is_model_exists_in_db(model_path):

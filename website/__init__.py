@@ -1,34 +1,28 @@
-from os import path
+import os
+from pathlib import Path
 
 from flask import Flask
 from flask_login import LoginManager
+from flask_migrate import Migrate
 from flask_session import Session
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
-
-
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
-
 
 db = SQLAlchemy()
-DB_NAME = "database.db"
 socket = SocketIO()
 
 
 def create_app():
     app = Flask(__name__)
     app.secret_key = "xyz"
-    app.config["SQLALCHEMY_DATABASE_URI"] = f'sqlite:///{DB_NAME}'
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://postgres:postgres@localhost:5432/postgres"
     app.config["SESSION_PERMANENT"] = False
     app.config["SESSION_TYPE"] = "filesystem"
 
     db.init_app(app)
+
+    migrate = Migrate(app, db)
+
     session = Session()
     session.init_app(app)
     socket.init_app(app)
@@ -43,6 +37,7 @@ def create_app():
     from .models import User, Project, Image
 
     create_database(app)
+    initialize_ml_models(app)
 
     login_manager = LoginManager()
     login_manager.login_view = "auth.login"
@@ -56,7 +51,22 @@ def create_app():
 
 
 def create_database(app):
-    if not path.exists(path.join('instance', DB_NAME)):
-        with app.app_context():
-            db.create_all()
-            print("DB created!")
+    with app.app_context():
+        db.create_all()
+        db.session.commit()
+        print("DB created!")
+
+
+def initialize_ml_models(app):
+    from .models import MlModels
+    with app.app_context():
+        # Ensure this runs only if MlModels table is empty
+        if not MlModels.query.first():  # Check if table is empty
+            base_path = Path(__file__).parent.parent / "ml_models"
+            for model_path in os.listdir(base_path):
+                full_model_path = base_path / model_path
+                db.session.add(
+                    MlModels(model=str(full_model_path), name=model_path)
+                )
+            db.session.commit()
+            print("MlModels table initialized!")
