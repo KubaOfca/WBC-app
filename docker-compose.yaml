@@ -17,7 +17,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8008:5000"
+      - "5000:5000"
     depends_on:
       - wbc-scan-db
 

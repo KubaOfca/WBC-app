@@ -1,27 +1,34 @@
-# Install python
+# Use slim Python base image
 FROM python:3.10-slim
 
-# Update Debian package manager
-RUN apt-get -q -y update
-RUN apt-get install -y gcc
+# Set environment variables early to prevent prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
 
-# Set environment variables
-ENV USERNAME=wbc-scan
-ENV WORKING_DIR=/app
+# Install system dependencies in jednej warstwie
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libgl1 \
+    libglib2.0-0 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR ${WORKING_DIR}
+# Set working directory
+WORKDIR /app
 
-# Copy app
+# Copy requirements separately for caching
+COPY requirement.txt .
+
+# Upgrade pip + install Python dependencies
+RUN pip install --upgrade pip \
+    && pip install -r requirement.txt --no-cache-dir
+
+# Copy rest of the app
 COPY . .
 
-# Install python requirements
-ENV PATH "$PATH:/home/${USERNAME}/.local/bin" # pip needs this for installations
-RUN pip install --upgrade pip
-RUN pip install -r requirement.txt
-
-# Setup flask app
+# Flask env
 ENV FLASK_APP=main
 EXPOSE 5000
 
-# Run
+# Run the app
 CMD ["python", "main.py"]
