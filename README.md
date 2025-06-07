@@ -21,7 +21,7 @@ If you haven't already, clone the WBC-Scan repository to your local machine:
 
 ```
 git clone https://github.com/KubaOfca/WBC-app
-cd wbc-scan
+cd WBC-app
 ```
 
 ### Build the Docker Container:
