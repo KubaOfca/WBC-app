@@ -26,6 +26,18 @@ cd WBC-app
 
 ### Build the Docker Container:
 
+create .env.dev file
+
+```
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+HOST=localhost
+PORT=5432
+POSTGRES_DB=postgres
+SECRET_KEY=c8f1419a8efe42ac0bde621b7cd9ed5a
+SERVER=DEFAULT
+```
+
 Navigate to the wbc-scan directory (where your docker-compose.yml file is located) and build the Docker images. This process can take a while (~15 minutes) as it downloads base images and installs application dependencies.
 
 ```
