@@ -20,7 +20,7 @@ Ensure your Docker daemon is running in the background. On most systems, you can
 If you haven't already, clone the WBC-Scan repository to your local machine:
 
 ```
-git clone https://github.com/your-username/wbc-scan.git
+git clone https://github.com/KubaOfca/WBC-app
 cd wbc-scan
 ```
 
